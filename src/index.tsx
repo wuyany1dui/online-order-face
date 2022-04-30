@@ -1,16 +1,14 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
+import MyRouter from './router';
 import reportWebVitals from './reportWebVitals';
+import 'antd/dist/antd.less';
+import { Provider } from 'react-redux';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <MyRouter />
 );
 
 // If you want to start measuring performance in your app, pass a function

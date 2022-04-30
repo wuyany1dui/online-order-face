@@ -1,25 +1,29 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Layout, Space } from 'antd';
+import MyHeader from './componments/MyHeader';
+import MyCarousel from './componments/MyCarousel';
+import MyCollapse from './componments/MyCollapse';
+import './Base.less'
+import './App.less'
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+
+const { Content, Footer } = Layout;
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout className="container">
+      <MyHeader />
+      <Content style={{ padding: '0 50px' }}>
+        <div className="site-layout-content">
+          <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
+            <MyCarousel />
+            <MyCollapse />
+          </Space>
+        </div>
+      </Content>
+      <Footer style={{ textAlign: 'center', backgroundColor: '#001529', color: '#fff' }}>Ant Design ©2018 Created by Ant UED</Footer>
+    </Layout>
   );
 }
 
