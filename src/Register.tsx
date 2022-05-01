@@ -9,11 +9,12 @@ import { useNavigate } from 'react-router-dom';
 interface IRegisterParam {
     username: string | number;
     password: any;
-    phoneNumber: number;
-    email: string;
+    phoneNumber?: number;
+    email?: string;
     type: number;
     agreement?: boolean;
-    comfirm?: string;
+    confirm?: string;
+    sign?: string;
 }
 
 
@@ -50,14 +51,14 @@ export default function Register() {
     const onFinish = (values: IRegisterParam) => {
         values.type = 0;
         delete values.agreement;
-        delete values.comfirm;
+        delete values.confirm;
         RegisterApi(values).then((res: any) => {
-            message.success(res, 1.5);
+            message.success(res, 1);
             setTimeout(() => {
                 navigate("/register");
             }, 1500);
         }).catch((res: any) => {
-            message.error(res.response.data, 1.5);
+            message.error(res.response.data, 1);
         });
     };
     return (
@@ -99,7 +100,7 @@ export default function Register() {
                 </Form.Item>
 
                 <Form.Item
-                    name="comfirm"
+                    name="confirm"
                     label="确认密码"
                     dependencies={['password']}
                     hasFeedback

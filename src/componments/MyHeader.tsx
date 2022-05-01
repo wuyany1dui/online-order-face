@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import './less/MyHeader.less';
-import DefaultAvater from '../assets/images/defaultAvater.png';
-import { Menu, Dropdown, Space, Layout, message } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { UserInfoApi } from "../request/api";
+import DefaultAvatar from '../assets/images/defaultAvatar.png';
+import {Menu, Dropdown, Space, Layout, message} from 'antd';
+import {DownOutlined} from '@ant-design/icons';
+import {Link, Navigate, useNavigate} from "react-router-dom";
+import {UserInfoApi} from "../request/api";
 
-const { Header } = Layout;
+const {Header} = Layout;
 
-const menuNames: string[] = ["首页", "商店", "餐品"];
+const normalUserNames: string[] = ["首页", "商店", "餐品", "我的订单"];
+
+const merchantMenuNames: string[] = ["首页", "商店", "餐品", "我的订单", "商店管理", "餐品管理"];
+
+const adminMenuName: string[] = ["用户管理", "商店管理", "餐品管理", "订单管理", "评论管理"];
+
+let menuNames: string[] = ["首页", "商店", "餐品"];
 
 // 用户信息对象
 interface IUserInfo {
@@ -18,7 +24,7 @@ interface IUserInfo {
     phoneNumber?: number | null;
     email?: string | null;
     sign?: string | null;
-    avater?: string | null;
+    avatar?: string | null;
     type: number | null;
     typeDesc: string | null;
 }
@@ -30,7 +36,7 @@ let userInfo: IUserInfo = {
     phoneNumber: null,
     email: null,
     sign: null,
-    avater: null,
+    avatar: null,
     type: null,
     typeDesc: null
 };
@@ -43,7 +49,7 @@ export default function MyHeader() {
     const dorpdownClick = (key: any) => {
         if (key.key === '1') {
             localStorage.removeItem("token");
-            navigate("/", { replace: true });
+            navigate("/", {replace: true});
         } else if (key.key === '0') {
             navigate("/userInfo");
         }
@@ -80,17 +86,15 @@ export default function MyHeader() {
         />
     );
 
-    const [avater, setAvater] = useState(DefaultAvater);
+    const [avatar, setAvatar] = useState(DefaultAvatar);
     const [nickname, setNickname] = useState("暂未登录");
 
     // 组件初始化时加载
     useEffect(() => {
         UserInfoApi().then((res: any) => {
             userInfo = res;
-            setAvater(userInfo.avater || DefaultAvater);
+            setAvatar(userInfo.avatar || DefaultAvatar);
             setNickname(userInfo.nickname || "暂未登录");
-        }).catch((res: any) => {
-            message.error("用户未验证", 1);
         });
     }, []);
 
@@ -98,31 +102,43 @@ export default function MyHeader() {
         menu = loginMenu;
     }
 
+    if (userInfo.type === 0) {
+        menuNames = normalUserNames;
+    } else if (userInfo.type === 1) {
+        menuNames = merchantMenuNames;
+    } else if (userInfo.type === 2) {
+        menuNames = adminMenuName;
+    }
+
     return (
         <Header>
-            <Space align="start" size={1470}>
-                <Menu
-                    theme="dark"
-                    mode="horizontal"
-                    defaultSelectedKeys={['1']}
-                    items={menuNames.map((menuName, index) => {
-                        const key = index + 1;
-                        return {
-                            key,
-                            label: menuName,
-                        };
-                    })}
-                />
-                <Dropdown overlay={menu} trigger={['click']}>
-                    <a onClick={e => e.preventDefault()} href="!#">
-                        <Space align="start">
-                            <img src={avater} alt="!#" width={45} height={45} style={{ marginRight: "5px" }}></img>
-                            {nickname}
-                            <DownOutlined />
-                        </Space>
-                    </a>
-                </Dropdown>
-            </Space>
+            <div>
+                <div className="menu">
+                    <Menu
+                        theme="dark"
+                        mode="horizontal"
+                        defaultSelectedKeys={['1']}
+                        items={menuNames.map((menuName, index) => {
+                            const key = index + 1;
+                            return {
+                                key,
+                                label: menuName,
+                            };
+                        })}
+                    />
+                </div>
+                <div className="dropdown">
+                    <Dropdown overlay={menu} trigger={['click']}>
+                        <a onClick={e => e.preventDefault()} href="!#">
+                            <Space align="start">
+                                <img src={avatar} alt="!#" width={45} height={45} style={{marginRight: "5px"}}></img>
+                                {nickname}
+                                <DownOutlined/>
+                            </Space>
+                        </a>
+                    </Dropdown>
+                </div>
+            </div>
         </Header>
     )
 }
