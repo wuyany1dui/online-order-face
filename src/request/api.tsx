@@ -23,3 +23,6 @@ export const QueryFirstPageStoreList = () => request.get('/store/queryFirstPageL
 
 // 获取餐品列表接口
 export const QueryProductListApi = (params: any) => request.post("/product/queryList", params);
+
+// 获取当前用户历史订单接口
+export const QueryOrderListApi = (params: any) => request.post("/order/queryList", params);

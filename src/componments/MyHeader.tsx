@@ -5,6 +5,7 @@ import {Menu, Dropdown, Space, Layout, message} from 'antd';
 import {DownOutlined} from '@ant-design/icons';
 import {Link, Navigate, useNavigate} from "react-router-dom";
 import {UserInfoApi} from "../request/api";
+import store from "../store";
 
 const {Header} = Layout;
 
@@ -110,6 +111,16 @@ export default function MyHeader() {
         menuNames = adminMenuName;
     }
 
+    const menuClick = (e: any) => {
+        // 创建action对象
+        const action = {
+            type: "menuClick",       // type属性是必须要写的，用于校验
+            value: e.key,          // value代表要修改为什么值
+        }
+        // 将action用dispatch方法传递给store
+        store.dispatch(action);
+    }
+
     return (
         <Header>
             <div>
@@ -125,6 +136,7 @@ export default function MyHeader() {
                                 label: menuName,
                             };
                         })}
+                        onClick={menuClick}
                     />
                 </div>
                 <div className="dropdown">

@@ -18,7 +18,9 @@ const routerArray: IRoute[] = [
     {path: "/register", componment: lazy(() => import("../Register"))},
     {path: "/userInfo", componment: lazy(() => import("../UserInfo"))},
     {path: "/storeInfo", componment: lazy(() => import("../componments/StoreInfo"))},
-    {path: "/ProductList", componment: lazy(() => import("../componments/ProductList"))}
+    {path: "/productList", componment: lazy(() => import("../componments/ProductList"))},
+    {path: "/productInfo", componment: lazy(() => import("../componments/ProductInfo"))},
+    {path: "/orderInfo", componment: lazy(() => import("../componments/OrderInfo"))}
 ]
 
 const MyRouter = () => {

@@ -1,8 +1,9 @@
 import React from "react";
 import {List, Avatar, Space, Input, Button} from 'antd';
 import {LineChartOutlined} from '@ant-design/icons';
-import {QueryProductListApi} from "../request/api";
+import {QueryProductListApi, UserInfoApi} from "../request/api";
 import "./less/ProductList.less";
+import {Link, Navigate} from "react-router-dom";
 
 interface IQueryProduct {
     id?: string;
@@ -30,7 +31,10 @@ interface IQueryProductPage {
 }
 
 let queryProductData: IQueryProduct = {pageIndex: 1, pageSize: 3};
+
 let queryProduct: IQueryProductPage = {count: 0, data: []}
+
+let userType: number = 0;
 
 class ProductList extends React.Component {
 
@@ -38,10 +42,14 @@ class ProductList extends React.Component {
         QueryProductListApi(queryProductData).then((res: any) => {
             queryProduct = res;
             this.setState(queryProduct);
-        })
+        });
+        UserInfoApi().then((res: any) => {
+            userType = res.type;
+        });
     }
 
     render() {
+
         const listData = queryProduct.data;
 
         // @ts-ignore
@@ -68,6 +76,11 @@ class ProductList extends React.Component {
             queryProductData.endPrice = e.target.value;
         }
 
+        const titleClick = () => {
+            // return(<Navigate to='/productInfo' replace={true}/>);
+            return(<Link to='/productInfo' replace={true}/>);
+        }
+
         return (
             <div className="product-list-box">
                 <div className="search-input">
@@ -90,6 +103,9 @@ class ProductList extends React.Component {
                             onChange={endPriceInputOnChange}
                         />
                         <Button type="primary">搜索</Button>
+                        {
+                            userType === 1 ? (<Button type="primary">新增商品</Button>) : ""
+                        }
                     </Space>
                 </div>
                 <div className="list">
@@ -125,10 +141,13 @@ class ProductList extends React.Component {
                                 }
                             >
                                 <List.Item.Meta
-                                    title={<a href={item.description}>{item.name}</a>}
+                                    title={<a onClick={titleClick}>{item.name}</a>}
                                     description={item.description}
                                 />
-                                售价：{item.price}
+                                售价：{item.price} <br/>
+                                {
+                                    userType === 1 ? (<Button type="primary">修改商品信息</Button>) : ""
+                                }
                             </List.Item>
                         )}
                     />

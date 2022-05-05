@@ -14,7 +14,7 @@ interface IStoreInfo {
     type: string;
     sort: number;
     createTime: string;
-    updateTime: Date | number | string;
+    updateTime: string;
 }
 
 let storeInfo: IStoreInfo = {
@@ -25,7 +25,7 @@ let storeInfo: IStoreInfo = {
     salesVolume: 0,
     sort: 0,
     type: "",
-    updateTime: 0,
+    updateTime: "",
     userId: ""
 }
 
@@ -51,24 +51,24 @@ class StoreInfo extends React.Component {
 
         const formItemLayout = {
             labelCol: {
-                xs: {span: 0},
-                sm: {span: 0},
+                xs: {span: 10},
+                sm: {span: 10},
             },
             wrapperCol: {
-                xs: {span: 0},
-                sm: {span: 0},
+                xs: {span: 50},
+                sm: {span: 50},
             },
         };
 
         const tailFormItemLayout = {
             wrapperCol: {
                 xs: {
-                    span: 0,
-                    offset: 0,
+                    span: 10,
+                    offset: 10,
                 },
                 sm: {
-                    span: 0,
-                    offset: 0,
+                    span: 50,
+                    offset: 50,
                 },
             },
         };
@@ -83,7 +83,6 @@ class StoreInfo extends React.Component {
         };
 
         return (
-
             <div className="store-box">
                 <Space>
                     <Row gutter={[16, 70]}>
