@@ -5,8 +5,7 @@ import MyCarousel from './componments/MyCarousel';
 import MyCollapse from './componments/MyCollapse';
 import './Base.less'
 import './App.less'
-import { connect } from 'react-redux';
-import { Dispatch } from 'redux';
+import ProductList from "./componments/ProductList";
 
 const { Content, Footer } = Layout;
 
@@ -17,8 +16,9 @@ function App() {
       <Content style={{ padding: '0 50px' }}>
         <div className="site-layout-content">
           <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
-            <MyCarousel />
-            <MyCollapse />
+            {/*<MyCarousel />*/}
+            {/*<MyCollapse />*/}
+              <ProductList></ProductList>
           </Space>
         </div>
       </Content>

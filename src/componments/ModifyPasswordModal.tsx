@@ -1,6 +1,6 @@
 import {Modal, Button, Input, Form, message} from 'antd';
 import React from "react";
-import {modifyUserPasswordApi} from "../request/api";
+import {ModifyUserPasswordApi} from "../request/api";
 
 class ModifyPasswordModal extends React.Component {
 
@@ -30,7 +30,7 @@ class ModifyPasswordModal extends React.Component {
         const onFinish = (values: IModifyPassword) => {
             this.setState({loading: true});
             delete values.confirmNewPassword;
-            modifyUserPasswordApi(values).then((res: any) => {
+            ModifyUserPasswordApi(values).then((res: any) => {
                 message.success(res, 1);
                 this.setState({loading: false, visible: false});
             }).catch((res: any) => {

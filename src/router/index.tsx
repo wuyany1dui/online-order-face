@@ -12,10 +12,13 @@ interface IRoute {
 
 // 定义路由接口数组，进行懒加载
 const routerArray: IRoute[] = [
-    {path: "/", componment: App, children: [{path: "list", componment: lazy(() => import("../pages/List"))}]},
+    // {path: "/", componment: App, children: [{path: "/storeInfo", componment: lazy(() => import("../componments/StoreInfo"))}]},
+    {path: "/", componment: App},
     {path: "/login", componment: lazy(() => import("../Login"))},
     {path: "/register", componment: lazy(() => import("../Register"))},
-    {path: "/userInfo", componment: lazy(() => import("../UserInfo"))}
+    {path: "/userInfo", componment: lazy(() => import("../UserInfo"))},
+    {path: "/storeInfo", componment: lazy(() => import("../componments/StoreInfo"))},
+    {path: "/ProductList", componment: lazy(() => import("../componments/ProductList"))}
 ]
 
 const MyRouter = () => {
