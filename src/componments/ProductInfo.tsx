@@ -35,19 +35,21 @@ interface IQueryProductPage {
 
 let tempProduct: IQueryProductList = {description: "", firstImage: "", id: "", name: "", price: 0, sales: 0};
 
-const { TextArea } = Input;
+const {TextArea} = Input;
 
 function Editor(props: { submitting: any, onChange: any, onSubmit: any, value: any }) {
-    return (<>
-        <Form.Item>
-            <TextArea rows={2} />
-        </Form.Item>
-        <Form.Item>
-            <Button htmlType="submit" type="primary">
-                添加评论
-            </Button>
-        </Form.Item>
-    </>);
+    return (
+        <div>
+            <Form.Item>
+                <TextArea rows={2}/>
+            </Form.Item>
+            <Form.Item>
+                <Button htmlType="submit" type="primary">
+                    添加评论
+                </Button>
+            </Form.Item>
+        </div>
+    );
 }
 
 function ProductInfo() {
