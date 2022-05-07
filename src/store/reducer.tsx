@@ -12,8 +12,8 @@ const defaultState = {
         merchantName: "",
         productInfos: [],
         price: 0,
-
-    }
+    },
+    productId: ""
 }
 
 // 导出一个函数，用于返回state
@@ -23,9 +23,13 @@ export default (state
     switch (action.type) {
         case "menuClick":
             newState.menuKey = action.value;
+            newState.productId = "";
             break;
         case "addOrder":
             newState.currentOrder = action.value;
+            break;
+        case "toProductInfo":
+            newState.productId = action.value;
             break;
     }
     return newState;

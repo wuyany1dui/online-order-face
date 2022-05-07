@@ -18,8 +18,13 @@ const {Content, Footer} = Layout;
 function App() {
 
     const [menuKey, setMenuKey] = React.useState(1);
+    const [productId, setProductId] = React.useState("");
+    const [showProduct, setShowProduct] = React.useState(false);
 
     const contentView = () => {
+        if (showProduct) {
+            return (<ProductInfo/>);
+        }
         if (menuKey == 3) {
             return (<ProductList/>);
         } else if (menuKey == 4) {
@@ -35,10 +40,22 @@ function App() {
 
     store.subscribe(() => {
         setMenuKey(store.getState().menuKey);
+        setProductId(store.getState().productId);
     })
 
     useEffect(() => {
     }, [menuKey])
+
+    useEffect(() => {
+        if (productId) {
+            setShowProduct(true);
+        } else {
+            setShowProduct(false);
+        }
+    }, [productId])
+
+    useEffect(() => {
+    }, [showProduct])
 
     return (
         <Layout className="container">

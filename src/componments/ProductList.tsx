@@ -3,7 +3,8 @@ import {List, Avatar, Space, Input, Button} from 'antd';
 import {LineChartOutlined} from '@ant-design/icons';
 import {QueryProductListApi, UserInfoApi} from "../request/api";
 import "./less/ProductList.less";
-import {Link, Navigate} from "react-router-dom";
+import {Link, Navigate, Outlet} from "react-router-dom";
+import store from "../store";
 
 interface IQueryProduct {
     id?: string;
@@ -68,17 +69,20 @@ class ProductList extends React.Component {
             queryProductData.type = e.target.value;
         }
 
-        const startPriceInputOnChange  = (e: any) => {
+        const startPriceInputOnChange = (e: any) => {
             queryProductData.startPrice = e.target.value;
         }
 
-        const endPriceInputOnChange  = (e: any) => {
+        const endPriceInputOnChange = (e: any) => {
             queryProductData.endPrice = e.target.value;
         }
 
-        const titleClick = () => {
-            // return(<Navigate to='/productInfo' replace={true}/>);
-            return(<Link to='/productInfo' replace={true}/>);
+        const titleClick = (e: any) => {
+            const action = {
+                type: "toProductInfo",
+                value: e,
+            }
+            store.dispatch(action);
         }
 
         return (
@@ -141,7 +145,7 @@ class ProductList extends React.Component {
                                 }
                             >
                                 <List.Item.Meta
-                                    title={<a onClick={titleClick}>{item.name}</a>}
+                                    title={<a onClick={() => titleClick(item.id)}>{item.name}</a>}
                                     description={item.description}
                                 />
                                 售价：{item.price} <br/>
