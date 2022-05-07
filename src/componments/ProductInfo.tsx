@@ -1,5 +1,5 @@
 import React, {createElement, useEffect, useState} from 'react';
-import {Comment, Tooltip, Avatar, Radio, Carousel, Space, Image, Descriptions, Button, Input} from 'antd';
+import {Comment, Tooltip, Avatar, Radio, Carousel, Space, Image, Descriptions, Button, Input, List, Form} from 'antd';
 import moment from 'moment';
 import "./less/ProductInfo.less";
 import Logo from '../assets/images/logo.jpg';
@@ -34,6 +34,21 @@ interface IQueryProductPage {
 }
 
 let tempProduct: IQueryProductList = {description: "", firstImage: "", id: "", name: "", price: 0, sales: 0};
+
+const { TextArea } = Input;
+
+function Editor(props: { submitting: any, onChange: any, onSubmit: any, value: any }) {
+    return (<>
+        <Form.Item>
+            <TextArea rows={2} />
+        </Form.Item>
+        <Form.Item>
+            <Button htmlType="submit" type="primary">
+                添加评论
+            </Button>
+        </Form.Item>
+    </>);
+}
 
 function ProductInfo() {
 
@@ -71,6 +86,7 @@ function ProductInfo() {
                         preview={{visible: false}}
                         width={200}
                         src={tempProduct.firstImage}
+                        // src={Laoba}
                         onClick={() => setVisible(true)}
                     />
                     <div style={{marginLeft: "20px"}}>
@@ -90,6 +106,17 @@ function ProductInfo() {
                         </Space>
                     </div>
                 </Space>
+                <Comment
+                    avatar={<Avatar src="https://joeschmoe.io/api/v1/random" alt="Han Solo"/>}
+                    content={
+                        <Editor
+                            onChange=""
+                            onSubmit=""
+                            submitting=""
+                            value=""
+                        />
+                    }
+                />
                 <Comment
                     author={<a>DrEAmSs59</a>}
                     avatar={<Avatar src="https://joeschmoe.io/api/v1/random" alt="Han Solo"/>}

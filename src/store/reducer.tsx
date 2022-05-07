@@ -13,7 +13,8 @@ const defaultState = {
         productInfos: [],
         price: 0,
     },
-    productId: ""
+    productId: "",
+    orderId: ""
 }
 
 // 导出一个函数，用于返回state
@@ -30,6 +31,9 @@ export default (state
             break;
         case "toProductInfo":
             newState.productId = action.value;
+            break;
+        case "openOrderModal":
+            newState.orderId = action.value;
             break;
     }
     return newState;

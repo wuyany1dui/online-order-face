@@ -1,5 +1,5 @@
 import React from "react";
-import {List, Avatar, Space, Input, Button} from 'antd';
+import {List, Avatar, Space, Input, Button, Modal, Divider} from 'antd';
 import {LineChartOutlined} from '@ant-design/icons';
 import {QueryProductListApi, UserInfoApi} from "../request/api";
 import "./less/ProductList.less";
@@ -39,6 +39,21 @@ let userType: number = 0;
 
 class ProductList extends React.Component {
 
+    state = {
+        loading: false,
+        visible: false,
+    };
+
+    showModal = () => {
+        this.setState({
+            visible: true,
+        });
+    };
+
+    handleCancel = () => {
+        this.setState({visible: false});
+    };
+
     componentWillMount() {
         QueryProductListApi(queryProductData).then((res: any) => {
             queryProduct = res;
@@ -50,6 +65,8 @@ class ProductList extends React.Component {
     }
 
     render() {
+
+        const {visible, loading} = this.state;
 
         const listData = queryProduct.data;
 
@@ -109,6 +126,38 @@ class ProductList extends React.Component {
                         <Button type="primary">搜索</Button>
                         {
                             userType === 1 ? (<Button type="primary">新增商品</Button>) : ""
+                        }
+                        {
+                            userType === 2 ? (
+                                <div>
+                                    <Button type="primary" onClick={this.showModal}>查看商品分类</Button>
+                                    <Modal visible={visible}
+                                           title="餐品分类"
+                                           footer={null}
+                                           onCancel={this.handleCancel}>
+                                        <div>
+                                            <Button type="primary">新增分类</Button>
+                                            <Divider></Divider>
+                                            <List
+                                                dataSource={listData}
+                                                pagination={{
+                                                    current: 1,
+                                                    total: 5,
+                                                    pageSize: 5,
+                                                    showSizeChanger: false}}
+                                                renderItem={item => (
+                                                    <List.Item>
+                                                        名称：炸鸡 <br/>
+                                                        创建时间：2022-05-07 14:46:05 <br/>
+                                                        <Button type="primary">删除</Button>
+                                                    </List.Item>
+                                                )}
+                                            >
+                                            </List>
+                                        </div>
+                                    </Modal>
+                                </div>
+                            ) : ""
                         }
                     </Space>
                 </div>

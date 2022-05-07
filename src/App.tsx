@@ -12,6 +12,7 @@ import ProductList from "./componments/ProductList";
 import {UserInfoApi} from "./request/api";
 import DefaultAvatar from "./assets/images/defaultAvatar.png";
 import StoreInfo from "./componments/StoreInfo";
+import StoreList from "./componments/StoreList";
 
 const {Content, Footer} = Layout;
 
@@ -25,7 +26,9 @@ function App() {
         if (showProduct) {
             return (<ProductInfo/>);
         }
-        if (menuKey == 3) {
+        if (menuKey == 2) {
+            return (<StoreList/>);
+        } else if (menuKey == 3) {
             return (<ProductList/>);
         } else if (menuKey == 4) {
             return (<OrderInfo/>);

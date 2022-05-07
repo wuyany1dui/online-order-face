@@ -20,7 +20,8 @@ const routerArray: IRoute[] = [
     {path: "/storeInfo", componment: lazy(() => import("../componments/StoreInfo"))},
     {path: "/productList", componment: lazy(() => import("../componments/ProductList"))},
     {path: "/productInfo", componment: lazy(() => import("../componments/ProductInfo"))},
-    {path: "/orderInfo", componment: lazy(() => import("../componments/OrderInfo"))}
+    {path: "/orderInfo", componment: lazy(() => import("../componments/OrderInfo"))},
+    {path: "/storeList", componment: lazy(() => import("../componments/StoreList"))}
 ]
 
 const MyRouter = () => {

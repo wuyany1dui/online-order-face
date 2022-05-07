@@ -1,9 +1,10 @@
-import React from "react";
-import {List, Typography, Divider, Space, Pagination, Button} from 'antd';
+import React, {useState} from "react";
+import {List, Typography, Divider, Space, Pagination, Button, Modal, Tooltip, Comment, Avatar} from 'antd';
 import './less/OrderInfo.less';
 import {QueryOrderListApi, UserInfoApi} from "../request/api";
 import FormDate from "../utils/DateUtils";
 import OrderProductInfoModal from "./OrderProductInfoModal";
+import moment from "moment";
 
 interface IQueryOrderParam {
     id?: string;
@@ -49,11 +50,70 @@ let listData: IOrderList[] = [];
 
 let resData: IResData = {count: 0, data: []};
 
+let showCurrentOrder: boolean = true;
+
+let showDeleteComment: boolean = false;
+
+const data = [
+    {
+        actions: [<span key="comment-list-reply-to-0">Reply to</span>],
+        author: 'Han Solo',
+        avatar: 'https://joeschmoe.io/api/v1/random',
+        content: (
+            <p>
+                We supply a series of design principles, practical patterns and high quality design
+                resources (Sketch and Axure), to help people create their product prototypes beautifully and
+                efficiently.
+            </p>
+        ),
+        datetime: (
+            <Tooltip title={moment().subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss')}>
+                <span>{moment().subtract(1, 'days').fromNow()}</span>
+            </Tooltip>
+        ),
+    },
+    {
+        actions: [<span key="comment-list-reply-to-0">Reply to</span>],
+        author: 'Han Solo',
+        avatar: 'https://joeschmoe.io/api/v1/random',
+        content: (
+            <p>
+                We supply a series of design principles, practical patterns and high quality design
+                resources (Sketch and Axure), to help people create their product prototypes beautifully and
+                efficiently.
+            </p>
+        ),
+        datetime: (
+            <Tooltip title={moment().subtract(2, 'days').format('YYYY-MM-DD HH:mm:ss')}>
+                <span>{moment().subtract(2, 'days').fromNow()}</span>
+            </Tooltip>
+        ),
+    },
+];
+
+
 class OrderInfo extends React.Component {
+
+    state = {
+        loading: false,
+        visible: false,
+        orderId: "",
+    };
 
     componentWillMount() {
         UserInfoApi().then((res: any) => {
             userId = res.id;
+            if (res.type === 2) {
+                showCurrentOrder = false;
+                showDeleteComment = true;
+                this.setState(showDeleteComment);
+                this.setState(showCurrentOrder);
+            } else {
+                showCurrentOrder = true;
+                showDeleteComment = false;
+                this.setState(showDeleteComment);
+                this.setState(showCurrentOrder);
+            }
         });
         orderListParams.userId = userId;
         QueryOrderListApi(orderListParams).then((res: any) => {
@@ -64,13 +124,38 @@ class OrderInfo extends React.Component {
         });
     }
 
+    showModal = () => {
+        this.setState({
+            visible: true,
+        });
+    };
+
+    handleCancel = () => {
+        this.setState({visible: false});
+    };
+
     render() {
+
+        // @ts-ignore
+        const IconText = ({icon, text}) => (
+            <Space>
+                {React.createElement(icon)}
+                {text}
+            </Space>
+        );
+
+        const {visible, loading} = this.state;
+
+        let modalListData = [1];
+
         return (
             <div className="order-box">
                 <Space direction="vertical">
                     <div className="title">
                         <Divider type="vertical" orientation="center">历史订单</Divider>
-                        <Button type="primary">查看当前订单</Button>
+                        {
+                            showCurrentOrder ? <Button type="primary">查看当前订单</Button> : ""
+                        }
                     </div>
                     <div className="list">
                         <List
@@ -88,8 +173,65 @@ class OrderInfo extends React.Component {
                                         订单支付时间：{FormDate(new Date(item.payTime))} <br/>
                                         订单状态：{item.statusDesc} <br/>
                                     </div>
-                                    <div>
-                                        <OrderProductInfoModal/>
+                                    <div className="order-product-info-modal-box">
+                                        <Button type="primary" onClick={this.showModal}>
+                                            查看订单内容
+                                        </Button>
+                                        <div className="modal">
+                                            <Modal visible={visible}
+                                                   title="订单内容"
+                                                   footer={null}
+                                                   onCancel={this.handleCancel}>
+                                                <List
+                                                    itemLayout="vertical"
+                                                    size="large"
+                                                    dataSource={modalListData}
+                                                    renderItem={item => (
+                                                        <List.Item
+                                                            key={item}
+                                                            extra={
+                                                                <img
+                                                                    width={272}
+                                                                    alt="logo"
+                                                                    src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                                                />
+                                                            }
+                                                        >
+                                                            <List.Item.Meta
+                                                                title="汉堡"
+                                                                description="test"
+                                                            />
+                                                            数量：2 <br/>
+                                                            售价：13.99 <br/>
+                                                            {/*{*/}
+                                                            {/*    userType === 1 ? (<Button type="primary">修改商品信息</Button>) : ""*/}
+                                                            {/*}*/}
+                                                        </List.Item>
+                                                    )}
+                                                />
+                                                <Space direction="horizontal">
+                                                    <Comment
+                                                        author={<a>DrEAmSs59</a>}
+                                                        avatar={<Avatar src="https://joeschmoe.io/api/v1/random"
+                                                                        alt="Han Solo"/>}
+                                                        content={
+                                                            <p>
+                                                                东西很好吃，孩子很喜欢
+                                                            </p>
+                                                        }
+                                                        datetime={
+                                                            <Tooltip title={moment().format('YYYY-MM-DD HH:mm:ss')}>
+                                                                <span>{moment().fromNow()}</span>
+                                                            </Tooltip>
+                                                        }
+                                                    >
+                                                        {
+                                                            showDeleteComment ? <Button type="primary">删除评论</Button> : ""
+                                                        }
+                                                    </Comment>
+                                                </Space>
+                                            </Modal>
+                                        </div>
                                     </div>
                                 </List.Item>}
                             pagination={{
