@@ -102,6 +102,13 @@ class ProductList extends React.Component {
             store.dispatch(action);
         }
 
+        const searchOnClick = () => {
+            QueryProductListApi(queryProductData).then((res: any) => {
+                queryProduct = res;
+                this.setState(queryProduct);
+            });
+        }
+
         return (
             <div className="product-list-box">
                 <div className="search-input">
@@ -123,7 +130,7 @@ class ProductList extends React.Component {
                             placeholder="上限价格"
                             onChange={endPriceInputOnChange}
                         />
-                        <Button type="primary">搜索</Button>
+                        <Button type="primary" onClick={searchOnClick}>搜索</Button>
                         {
                             userType === 1 ? (<Button type="primary">新增商品</Button>) : ""
                         }

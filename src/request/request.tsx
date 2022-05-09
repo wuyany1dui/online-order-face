@@ -9,7 +9,7 @@ interface AxiosOption {
 // 配置项
 const axiosOption: AxiosOption = {
   baseURL: 'http://localhost:8597/online/order',
-  timeout: 5000
+  timeout: 10000
 }
 
 // 创建一个单例

@@ -26,3 +26,9 @@ export const QueryProductListApi = (params: any) => request.post("/product/query
 
 // 获取当前用户历史订单接口
 export const QueryOrderListApi = (params: any) => request.post("/order/queryList", params);
+
+// 获取商店列表接口
+export const QueryStoreListApi = (params: any) => request.post("/store/queryList", params);
+
+// 获取用户是否对该餐品是否能评论接口
+export const QueryCheckComment = (params: any) => request.get("comment/check" + params);

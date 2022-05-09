@@ -96,6 +96,8 @@ export default function MyHeader() {
             userInfo = res;
             setAvatar(userInfo.avatar || DefaultAvatar);
             setNickname(userInfo.nickname || "暂未登录");
+        }).catch(() => {
+            localStorage.removeItem("token")
         });
     }, []);
 
