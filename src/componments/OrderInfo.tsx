@@ -9,6 +9,7 @@ import moment from "moment";
 interface IQueryOrderParam {
     id?: string;
     userId?: string;
+    status?: string;
     pageIndex: number;
     pageSize: number;
 }
@@ -47,6 +48,8 @@ let userId: string = "";
 let orderListParams: IQueryOrderParam = {pageIndex: 1, pageSize: 3}
 
 let listData: IOrderList[] = [];
+
+let currentListData: IOrderList[] = [];
 
 let resData: IResData = {count: 0, data: []};
 
@@ -97,6 +100,8 @@ class OrderInfo extends React.Component {
     state = {
         loading: false,
         visible: false,
+        currentOrderVisible: false,
+        currentOrderDetailVisible: false,
         orderId: "",
     };
 
@@ -130,8 +135,37 @@ class OrderInfo extends React.Component {
         });
     };
 
+    showCurrentOrderModal = () => {
+        this.setState({
+            currentOrderVisible: true,
+        });
+        orderListParams.status = "0";
+        UserInfoApi().then((res: any) => {
+            userId = res.id;
+        });
+        orderListParams.userId = userId;
+        QueryOrderListApi(orderListParams).then((res: any) => {
+            currentListData = res.data;
+            this.setState(currentListData);
+        });
+    }
+
+    showCurrentOrderDetailModal = () => {
+        this.setState({
+            currentOrderDetailVisible: true,
+        });
+    };
+
     handleCancel = () => {
         this.setState({visible: false});
+    };
+
+    handleCurrentOrderCancel = () => {
+        this.setState({currentOrderVisible: false});
+    };
+
+    handleCurrentOrderDetailCancel = () => {
+        this.setState({currentOrderDetailVisible: false});
     };
 
     render() {
@@ -144,7 +178,7 @@ class OrderInfo extends React.Component {
             </Space>
         );
 
-        const {visible, loading} = this.state;
+        const {visible, loading, currentOrderVisible, currentOrderDetailVisible} = this.state;
 
         let modalListData = [1];
 
@@ -154,7 +188,78 @@ class OrderInfo extends React.Component {
                     <div className="title">
                         <Divider type="vertical" orientation="center">历史订单</Divider>
                         {
-                            showCurrentOrder ? <Button type="primary">查看当前订单</Button> : ""
+                            showCurrentOrder ?
+                                (
+                                    <div style={{float: "right"}}>
+                                        <Button type="primary" onClick={this.showCurrentOrderModal}>查看当前订单</Button>
+                                        <div className="modal">
+                                            <Modal visible={currentOrderVisible}
+                                                   title="当前订单"
+                                                   footer={null}
+                                                   onCancel={this.handleCurrentOrderCancel}>
+                                                <div className="list">
+                                                    <List
+                                                        size="large"
+                                                        bordered
+                                                        dataSource={currentListData}
+                                                        renderItem={item =>
+                                                            <List.Item>
+                                                                <div>
+                                                                    订单编号：{item.id} <br/>
+                                                                    商家名称：{item.merchantName} <br/>
+                                                                    商店名称：{item.storeName} <br/>
+                                                                    订单价格：{item.price} <br/>
+                                                                    订单创建时间：{FormDate(new Date(item.createTime))} <br/>
+                                                                    订单支付时间：{FormDate(new Date(item.payTime))} <br/>
+                                                                    订单状态：{item.statusDesc} <br/>
+                                                                </div>
+                                                                <div className="order-product-info-modal-box">
+                                                                    <Button type="primary" onClick={this.showCurrentOrderDetailModal}>
+                                                                        查看订单内容
+                                                                    </Button>
+                                                                    <div className="modal">
+                                                                        <Modal visible={currentOrderDetailVisible}
+                                                                               title="订单内容"
+                                                                               footer={null}
+                                                                               onCancel={this.handleCurrentOrderDetailCancel}>
+                                                                            <List
+                                                                                itemLayout="vertical"
+                                                                                size="large"
+                                                                                dataSource={modalListData}
+                                                                                renderItem={item => (
+                                                                                    <List.Item
+                                                                                        key={item}
+                                                                                        extra={
+                                                                                            <img
+                                                                                                width={272}
+                                                                                                alt="logo"
+                                                                                                src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                                                                            />
+                                                                                        }
+                                                                                    >
+                                                                                        <List.Item.Meta
+                                                                                            title="汉堡"
+                                                                                            description="test"
+                                                                                        />
+                                                                                        数量：2 <br/>
+                                                                                        售价：13.99 <br/>
+                                                                                    </List.Item>
+                                                                                )}
+                                                                            />
+                                                                        </Modal>
+                                                                    </div>
+                                                                </div>
+                                                            </List.Item>}
+                                                        pagination={{
+                                                            total: resData.count,
+                                                            pageSize: 5,
+                                                        }}
+                                                    />
+                                                </div>
+                                            </Modal>
+                                        </div>
+                                    </div>
+                                ) : ""
                         }
                     </div>
                     <div className="list">
@@ -209,27 +314,32 @@ class OrderInfo extends React.Component {
                                                         </List.Item>
                                                     )}
                                                 />
-                                                <Space direction="horizontal">
-                                                    <Comment
-                                                        author={<a>DrEAmSs59</a>}
-                                                        avatar={<Avatar src="https://joeschmoe.io/api/v1/random"
-                                                                        alt="Han Solo"/>}
-                                                        content={
-                                                            <p>
-                                                                东西很好吃，孩子很喜欢
-                                                            </p>
-                                                        }
-                                                        datetime={
-                                                            <Tooltip title={moment().format('YYYY-MM-DD HH:mm:ss')}>
-                                                                <span>{moment().fromNow()}</span>
-                                                            </Tooltip>
-                                                        }
-                                                    >
-                                                        {
-                                                            showDeleteComment ? <Button type="primary">删除评论</Button> : ""
-                                                        }
-                                                    </Comment>
-                                                </Space>
+                                                {
+                                                    item.status == 1 ? (
+                                                        <Space direction="horizontal">
+                                                            <Comment
+                                                                author={<a>DrEAmSs59</a>}
+                                                                avatar={<Avatar src="https://joeschmoe.io/api/v1/random"
+                                                                                alt="Han Solo"/>}
+                                                                content={
+                                                                    <p>
+                                                                        东西很好吃，孩子很喜欢
+                                                                    </p>
+                                                                }
+                                                                datetime={
+                                                                    <Tooltip
+                                                                        title={moment().format('YYYY-MM-DD HH:mm:ss')}>
+                                                                        <span>{moment().fromNow()}</span>
+                                                                    </Tooltip>
+                                                                }
+                                                            >
+                                                                {
+                                                                    showDeleteComment ?
+                                                                        <Button type="primary">删除评论</Button> : ""
+                                                                }
+                                                            </Comment>
+                                                        </Space>) : ""
+                                                }
                                             </Modal>
                                         </div>
                                     </div>

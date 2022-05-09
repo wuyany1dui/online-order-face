@@ -133,25 +133,27 @@ function ProductInfo() {
             let productInfo = {productId: productId, productName: productName, count: count};
             let order = {id: "", userId: res.id, username: res.username, nickname: res.nickname,
                 storeId: storeId, storeName: storeName, merchantId: merchantId, merchantName: merchantName, productInfos: [productInfo]};
-            // const action = {
-            //     type: "addOrder",
-            //     value: order,
-            // }
             let queryOrderListParams: IQueryOrderParam = {pageIndex: 1, pageSize: 1, status: "0"};
             QueryOrderListApi(queryOrderListParams).then((res: any) => {
                 if (res.data.length !== 0) {
                     order.id = res.data[0].id;
-                    res.data[0].productInfos.map(((item: { productId: string; productName: string; count: number; }) => {
-                        order.productInfos.push(item);
-                    }))
+                    let oldProduct = res.data[0].productInfos
+                        .find((item: { productId: string; productName: string; count: number}) => item.productId == productInfo.productId);
+                    if (oldProduct !== undefined) {
+                        order.productInfos[0].count = Number(oldProduct.count) + Number(order.productInfos[0].count);
+                    }
+                    let oldProducts = res.data[0].productInfos
+                        .filter((item: { productId: string; productName: string; count: number}) => item.productId !== productInfo.productId);
+                    if (oldProducts.length !== 0) {
+                        oldProducts.map(((item: { productId: string; productName: string; count: number; }) => {
+                            order.productInfos.push(item);
+                        }))
+                    }
                 }
                 CreateOrder(order).then((res: any) => {
                     message.success("添加成功！");
                 });
             })
-            // console.log("testOrder: ");
-            // console.log(order);
-            // store.dispatch(action);
         })
     }
 
