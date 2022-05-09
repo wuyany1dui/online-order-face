@@ -31,4 +31,7 @@ export const QueryOrderListApi = (params: any) => request.post("/order/queryList
 export const QueryStoreListApi = (params: any) => request.post("/store/queryList", params);
 
 // 获取用户是否对该餐品是否能评论接口
-export const QueryCheckComment = (params: any) => request.get("comment/check" + params);
+export const QueryCheckComment = (params: any) => request.get("/comment/check" + params);
+
+// 新建订单接口
+export const CreateOrder = (params: any) => request.post("/order/create", params);

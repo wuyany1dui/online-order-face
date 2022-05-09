@@ -5,7 +5,7 @@ import "./less/ProductInfo.less";
 import Logo from '../assets/images/logo.jpg';
 import Laoba from '../assets/images/laoba.jpg';
 import {PlusOutlined} from '@ant-design/icons';
-import {QueryCheckComment, QueryProductListApi, UserInfoApi} from "../request/api";
+import {CreateOrder, QueryCheckComment, QueryProductListApi, UserInfoApi} from "../request/api";
 import store from "../store";
 
 interface IQueryProduct {
@@ -111,13 +111,16 @@ function ProductInfo() {
             let productInfo = {productId: productId, productName: productName, count: count};
             let order = {id: "", userId: res.id, username: res.username, nickname: res.nickname,
                 storeId: storeId, storeName: storeName, merchantId: merchantId, merchantName: merchantName, productInfos: [productInfo]};
-            const action = {
-                type: "addOrder",
-                value: order,
-            }
-            console.log("testOrder: ");
-            console.log(order);
-            store.dispatch(action);
+            // const action = {
+            //     type: "addOrder",
+            //     value: order,
+            // }
+            CreateOrder(order).then((res: any) => {
+                console.log(res);
+            });
+            // console.log("testOrder: ");
+            // console.log(order);
+            // store.dispatch(action);
         })
     }
 
