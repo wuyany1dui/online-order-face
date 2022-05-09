@@ -1,11 +1,25 @@
 import React, {createElement, useEffect, useState} from 'react';
-import {Comment, Tooltip, Avatar, Radio, Carousel, Space, Image, Descriptions, Button, Input, List, Form} from 'antd';
+import {
+    Comment,
+    Tooltip,
+    Avatar,
+    Radio,
+    Carousel,
+    Space,
+    Image,
+    Descriptions,
+    Button,
+    Input,
+    List,
+    Form,
+    message
+} from 'antd';
 import moment from 'moment';
 import "./less/ProductInfo.less";
 import Logo from '../assets/images/logo.jpg';
 import Laoba from '../assets/images/laoba.jpg';
 import {PlusOutlined} from '@ant-design/icons';
-import {CreateOrder, QueryCheckComment, QueryProductListApi, UserInfoApi} from "../request/api";
+import {CreateOrder, QueryCheckComment, QueryOrderListApi, QueryProductListApi, UserInfoApi} from "../request/api";
 import store from "../store";
 
 interface IQueryProduct {
@@ -73,6 +87,14 @@ let canComment: boolean = false;
 
 const {TextArea} = Input;
 
+interface IQueryOrderParam {
+    id?: string;
+    userId?: string;
+    status?: string;
+    pageIndex: number;
+    pageSize: number;
+}
+
 function Editor(props: { submitting: any, onChange: any, onSubmit: any, value: any }) {
     return (
         <div>
@@ -115,9 +137,18 @@ function ProductInfo() {
             //     type: "addOrder",
             //     value: order,
             // }
-            CreateOrder(order).then((res: any) => {
-                console.log(res);
-            });
+            let queryOrderListParams: IQueryOrderParam = {pageIndex: 1, pageSize: 1, status: "0"};
+            QueryOrderListApi(queryOrderListParams).then((res: any) => {
+                if (res.data.length !== 0) {
+                    order.id = res.data[0].id;
+                    res.data[0].productInfos.map(((item: { productId: string; productName: string; count: number; }) => {
+                        order.productInfos.push(item);
+                    }))
+                }
+                CreateOrder(order).then((res: any) => {
+                    message.success("添加成功！");
+                });
+            })
             // console.log("testOrder: ");
             // console.log(order);
             // store.dispatch(action);
