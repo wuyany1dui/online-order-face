@@ -21,10 +21,15 @@ function App() {
     const [menuKey, setMenuKey] = React.useState(1);
     const [productId, setProductId] = React.useState("");
     const [showProduct, setShowProduct] = React.useState(false);
+    const [storeId, setStoreId] = React.useState("");
+    const [showProductList, setShowProductList] = React.useState(false);
 
     const contentView = () => {
         if (showProduct) {
             return (<ProductInfo/>);
+        }
+        if (showProductList) {
+            return (<ProductList/>);
         }
         if (menuKey == 2) {
             return (<StoreList/>);
@@ -43,10 +48,13 @@ function App() {
 
     store.subscribe(() => {
         setMenuKey(store.getState().menuKey);
+        setStoreId(store.getState().storeId);
         setProductId(store.getState().productId);
     })
 
     useEffect(() => {
+        setStoreId("");
+        setProductId("");
     }, [menuKey])
 
     useEffect(() => {
@@ -56,6 +64,14 @@ function App() {
             setShowProduct(false);
         }
     }, [productId])
+
+    useEffect(() => {
+        if (storeId) {
+            setShowProductList(true);
+        } else {
+            setShowProductList(false);
+        }
+    }, [storeId])
 
     useEffect(() => {
     }, [showProduct])

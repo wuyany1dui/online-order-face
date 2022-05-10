@@ -1,10 +1,18 @@
 import React, {useState} from "react";
-import {List, Typography, Divider, Space, Pagination, Button, Modal, Tooltip, Comment, Avatar} from 'antd';
+import {List, Typography, Divider, Space, Pagination, Button, Modal, Tooltip, Comment, Avatar, message} from 'antd';
 import './less/OrderInfo.less';
-import {QueryOrderListApi, UserInfoApi} from "../request/api";
+import {
+    PayOrder,
+    QueryCommentList,
+    QueryOrderDetail,
+    QueryOrderListApi,
+    QueryProductListApi,
+    UserInfoApi
+} from "../request/api";
 import FormDate from "../utils/DateUtils";
 import OrderProductInfoModal from "./OrderProductInfoModal";
 import moment from "moment";
+import erweima from "../assets/images/erweima.png";
 
 interface IQueryOrderParam {
     id?: string;
@@ -12,6 +20,24 @@ interface IQueryOrderParam {
     status?: string;
     pageIndex: number;
     pageSize: number;
+}
+
+interface IQueryCommentParam {
+    orderId?: string;
+    productId?: string;
+    userId?: string;
+    pageIndex: number;
+    pageSize: number;
+}
+
+interface ICommentList {
+    id: string;
+    userId: string;
+    username: string;
+    nickname: string;
+    orderId: string;
+    content: string;
+    createTime: number | Date
 }
 
 interface IOrderList {
@@ -36,6 +62,7 @@ interface IProductInfo {
     productName: string;
     firstImage: string;
     count: number;
+    price: number;
 }
 
 interface IResData {
@@ -47,53 +74,26 @@ let userId: string = "";
 
 let orderListParams: IQueryOrderParam = {pageIndex: 1, pageSize: 3}
 
+let commentListParams: IQueryCommentParam = {pageIndex: 1, pageSize: 2}
+
 let listData: IOrderList[] = [];
 
 let currentListData: IOrderList[] = [];
 
 let resData: IResData = {count: 0, data: []};
 
+let currentResData: IResData = {count: 0, data: []};
+
 let showCurrentOrder: boolean = true;
 
 let showDeleteComment: boolean = false;
 
-const data = [
-    {
-        actions: [<span key="comment-list-reply-to-0">Reply to</span>],
-        author: 'Han Solo',
-        avatar: 'https://joeschmoe.io/api/v1/random',
-        content: (
-            <p>
-                We supply a series of design principles, practical patterns and high quality design
-                resources (Sketch and Axure), to help people create their product prototypes beautifully and
-                efficiently.
-            </p>
-        ),
-        datetime: (
-            <Tooltip title={moment().subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss')}>
-                <span>{moment().subtract(1, 'days').fromNow()}</span>
-            </Tooltip>
-        ),
-    },
-    {
-        actions: [<span key="comment-list-reply-to-0">Reply to</span>],
-        author: 'Han Solo',
-        avatar: 'https://joeschmoe.io/api/v1/random',
-        content: (
-            <p>
-                We supply a series of design principles, practical patterns and high quality design
-                resources (Sketch and Axure), to help people create their product prototypes beautifully and
-                efficiently.
-            </p>
-        ),
-        datetime: (
-            <Tooltip title={moment().subtract(2, 'days').format('YYYY-MM-DD HH:mm:ss')}>
-                <span>{moment().subtract(2, 'days').fromNow()}</span>
-            </Tooltip>
-        ),
-    },
-];
+let showPay: boolean = false;
 
+let modalListData: IProductInfo[] = [];
+
+let commentResData: IResData = {count: 0, data: []};
+let commentListData: ICommentList[] = [];
 
 class OrderInfo extends React.Component {
 
@@ -102,6 +102,7 @@ class OrderInfo extends React.Component {
         visible: false,
         currentOrderVisible: false,
         currentOrderDetailVisible: false,
+        payVisible: false,
         orderId: "",
     };
 
@@ -129,11 +130,56 @@ class OrderInfo extends React.Component {
         });
     }
 
-    showModal = () => {
+    showModal = (id: string) => {
+        QueryOrderDetail(id).then((res: any) => {
+            modalListData = res;
+            this.setState(modalListData);
+        })
+        QueryCommentList("?orderId=" + id + "&pageIndex=" + commentListParams.pageIndex + "&pageSize=" + commentListParams.pageSize)
+            .then((res: any) => {
+                commentResData = res;
+                commentListData = res.data;
+                this.setState(commentResData);
+                this.setState(commentListData);
+            })
         this.setState({
             visible: true,
         });
     };
+
+    showPayModal = () => {
+        this.setState({payVisible: true});
+    }
+
+    payOrder = (id: string) => {
+        PayOrder(id).then((res: any) => {
+            message.success(res);
+            this.setState({payVisible: false});
+            UserInfoApi().then((res: any) => {
+                userId = res.id;
+                if (res.type === 2) {
+                    showCurrentOrder = false;
+                    showDeleteComment = true;
+                    this.setState(showDeleteComment);
+                    this.setState(showCurrentOrder);
+                } else {
+                    showCurrentOrder = true;
+                    showDeleteComment = false;
+                    this.setState(showDeleteComment);
+                    this.setState(showCurrentOrder);
+                }
+            });
+            orderListParams.userId = userId;
+            QueryOrderListApi(orderListParams).then((res: any) => {
+                resData = res;
+                listData = res.data;
+                this.setState(resData);
+                this.setState(listData);
+            });
+        }).catch((err: any) => {
+            message.error(err);
+        })
+    }
 
     showCurrentOrderModal = () => {
         this.setState({
@@ -145,8 +191,10 @@ class OrderInfo extends React.Component {
         });
         orderListParams.userId = userId;
         QueryOrderListApi(orderListParams).then((res: any) => {
+            currentResData = res;
             currentListData = res.data;
             this.setState(currentListData);
+            this.setState(currentResData);
         });
     }
 
@@ -159,6 +207,10 @@ class OrderInfo extends React.Component {
     handleCancel = () => {
         this.setState({visible: false});
     };
+
+    handlePayCancel = () => {
+        this.setState({payVisible: false});
+    }
 
     handleCurrentOrderCancel = () => {
         this.setState({currentOrderVisible: false});
@@ -178,89 +230,13 @@ class OrderInfo extends React.Component {
             </Space>
         );
 
-        const {visible, loading, currentOrderVisible, currentOrderDetailVisible} = this.state;
-
-        let modalListData = [1];
+        const {visible, loading, currentOrderVisible, currentOrderDetailVisible, payVisible} = this.state;
 
         return (
             <div className="order-box">
                 <Space direction="vertical">
                     <div className="title">
                         <Divider type="vertical" orientation="center">历史订单</Divider>
-                        {
-                            showCurrentOrder ?
-                                (
-                                    <div style={{float: "right"}}>
-                                        <Button type="primary" onClick={this.showCurrentOrderModal}>查看当前订单</Button>
-                                        <div className="modal">
-                                            <Modal visible={currentOrderVisible}
-                                                   title="当前订单"
-                                                   footer={null}
-                                                   onCancel={this.handleCurrentOrderCancel}>
-                                                <div className="list">
-                                                    <List
-                                                        size="large"
-                                                        bordered
-                                                        dataSource={currentListData}
-                                                        renderItem={item =>
-                                                            <List.Item>
-                                                                <div>
-                                                                    订单编号：{item.id} <br/>
-                                                                    商家名称：{item.merchantName} <br/>
-                                                                    商店名称：{item.storeName} <br/>
-                                                                    订单价格：{item.price} <br/>
-                                                                    订单创建时间：{FormDate(new Date(item.createTime))} <br/>
-                                                                    订单支付时间：{FormDate(new Date(item.payTime))} <br/>
-                                                                    订单状态：{item.statusDesc} <br/>
-                                                                </div>
-                                                                <div className="order-product-info-modal-box">
-                                                                    <Button type="primary" onClick={this.showCurrentOrderDetailModal}>
-                                                                        查看订单内容
-                                                                    </Button>
-                                                                    <div className="modal">
-                                                                        <Modal visible={currentOrderDetailVisible}
-                                                                               title="订单内容"
-                                                                               footer={null}
-                                                                               onCancel={this.handleCurrentOrderDetailCancel}>
-                                                                            <List
-                                                                                itemLayout="vertical"
-                                                                                size="large"
-                                                                                dataSource={modalListData}
-                                                                                renderItem={item => (
-                                                                                    <List.Item
-                                                                                        key={item}
-                                                                                        extra={
-                                                                                            <img
-                                                                                                width={272}
-                                                                                                alt="logo"
-                                                                                                src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
-                                                                                            />
-                                                                                        }
-                                                                                    >
-                                                                                        <List.Item.Meta
-                                                                                            title="汉堡"
-                                                                                            description="test"
-                                                                                        />
-                                                                                        数量：2 <br/>
-                                                                                        售价：13.99 <br/>
-                                                                                    </List.Item>
-                                                                                )}
-                                                                            />
-                                                                        </Modal>
-                                                                    </div>
-                                                                </div>
-                                                            </List.Item>}
-                                                        pagination={{
-                                                            total: resData.count,
-                                                            pageSize: 5,
-                                                        }}
-                                                    />
-                                                </div>
-                                            </Modal>
-                                        </div>
-                                    </div>
-                                ) : ""
-                        }
                     </div>
                     <div className="list">
                         <List
@@ -275,13 +251,40 @@ class OrderInfo extends React.Component {
                                         商店名称：{item.storeName} <br/>
                                         订单价格：{item.price} <br/>
                                         订单创建时间：{FormDate(new Date(item.createTime))} <br/>
-                                        订单支付时间：{FormDate(new Date(item.payTime))} <br/>
+                                        {
+                                            item.status === 1 ? (
+                                                <div>
+                                                    订单支付时间：{FormDate(new Date(item.payTime))} <br/>
+                                                </div>
+                                            ) : ""
+                                        }
                                         订单状态：{item.statusDesc} <br/>
                                     </div>
                                     <div className="order-product-info-modal-box">
-                                        <Button type="primary" onClick={this.showModal}>
-                                            查看订单内容
-                                        </Button>
+                                        <Space direction="vertical">
+                                            <Button type="primary" onClick={() => this.showModal(item.id)}>
+                                                查看订单内容
+                                            </Button>
+                                            {
+                                                item.status === 0 ? (
+                                                    <div>
+                                                        <Button type="primary"
+                                                                onClick={() => this.showPayModal()}>
+                                                            立即支付
+                                                        </Button>
+                                                        <Modal visible={payVisible}
+                                                               title="请打开微信或支付宝扫描二维码"
+                                                               footer={null}
+                                                               onCancel={this.handlePayCancel}
+                                                        >
+                                                            <img src={erweima} style={{height: "400px"}}/>
+                                                            <Button type="primary"
+                                                                    onClick={() => this.payOrder(item.id)}>支付成功</Button>
+                                                        </Modal>
+                                                    </div>
+                                                ) : ""
+                                            }
+                                        </Space>
                                         <div className="modal">
                                             <Modal visible={visible}
                                                    title="订单内容"
@@ -291,9 +294,9 @@ class OrderInfo extends React.Component {
                                                     itemLayout="vertical"
                                                     size="large"
                                                     dataSource={modalListData}
-                                                    renderItem={item => (
+                                                    renderItem={product => (
                                                         <List.Item
-                                                            key={item}
+                                                            key={product.productId}
                                                             extra={
                                                                 <img
                                                                     width={272}
@@ -303,11 +306,10 @@ class OrderInfo extends React.Component {
                                                             }
                                                         >
                                                             <List.Item.Meta
-                                                                title="汉堡"
-                                                                description="test"
+                                                                title={product.productName}
                                                             />
-                                                            数量：2 <br/>
-                                                            售价：13.99 <br/>
+                                                            数量：{product.count} <br/>
+                                                            售价：{product.price} <br/>
                                                             {/*{*/}
                                                             {/*    userType === 1 ? (<Button type="primary">修改商品信息</Button>) : ""*/}
                                                             {/*}*/}
@@ -315,30 +317,38 @@ class OrderInfo extends React.Component {
                                                     )}
                                                 />
                                                 {
-                                                    item.status == 1 ? (
-                                                        <Space direction="horizontal">
-                                                            <Comment
-                                                                author={<a>DrEAmSs59</a>}
-                                                                avatar={<Avatar src="https://joeschmoe.io/api/v1/random"
-                                                                                alt="Han Solo"/>}
-                                                                content={
-                                                                    <p>
-                                                                        东西很好吃，孩子很喜欢
-                                                                    </p>
-                                                                }
-                                                                datetime={
-                                                                    <Tooltip
-                                                                        title={moment().format('YYYY-MM-DD HH:mm:ss')}>
-                                                                        <span>{moment().fromNow()}</span>
-                                                                    </Tooltip>
-                                                                }
-                                                            >
-                                                                {
-                                                                    showDeleteComment ?
-                                                                        <Button type="primary">删除评论</Button> : ""
-                                                                }
-                                                            </Comment>
-                                                        </Space>) : ""
+                                                    commentListData.length !== 0 ? (
+                                                        <List size="large"
+                                                              bordered
+                                                              dataSource={commentListData}
+                                                              renderItem={comment => (
+                                                                  <List.Item>
+                                                                      <Space direction="horizontal">
+                                                                          <Comment
+                                                                              author={<a>{comment.nickname}</a>}
+                                                                              content={
+                                                                                  <p>
+                                                                                      {comment.content}
+                                                                                  </p>
+                                                                              }
+                                                                              datetime={
+                                                                                  <Tooltip
+                                                                                      title={moment().format('YYYY-MM-DD HH:mm:ss')}>
+                                                                                      <span>{moment().fromNow()}</span>
+                                                                                  </Tooltip>
+                                                                              }
+                                                                          >
+                                                                              {
+                                                                                  showDeleteComment ?
+                                                                                      <Button
+                                                                                          type="primary">删除评论</Button> : ""
+                                                                              }
+                                                                          </Comment>
+                                                                      </Space>
+                                                                  </List.Item>
+                                                              )}
+                                                        />
+                                                    ) : ""
                                                 }
                                             </Modal>
                                         </div>
@@ -346,7 +356,16 @@ class OrderInfo extends React.Component {
                                 </List.Item>}
                             pagination={{
                                 total: resData.count,
-                                pageSize: 5,
+                                pageSize: listData.length,
+                                onChange: page => {
+                                    orderListParams.pageIndex = page;
+                                    QueryOrderListApi(orderListParams).then((res: any) => {
+                                        resData = res;
+                                        listData = res.data;
+                                        this.setState(resData);
+                                        this.setState(listData);
+                                    })
+                                }
                             }}
                         />
                     </div>

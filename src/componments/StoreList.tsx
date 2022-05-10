@@ -2,6 +2,7 @@ import {Button, Input, List, Space} from "antd";
 import "./less/ProductList.less";
 import React, {useEffect, useState} from "react";
 import {QueryStoreListApi} from "../request/api";
+import store from "../store";
 
 const data = [
     'Racing car sprays burning fuel into crowd.',
@@ -52,8 +53,12 @@ export default function StoreList() {
         })
     }
 
-    const titleOnClick = () => {
-
+    const titleOnClick = (id: string) => {
+        const action = {
+            type: "toProductList",
+            value: id,
+        }
+        store.dispatch(action);
     }
 
     useEffect(() => {
@@ -89,7 +94,7 @@ export default function StoreList() {
                         }}
                         renderItem={item =>
                             <List.Item>
-                                名称：<a onClick={titleOnClick}>{item.name}</a><br/>
+                                名称：<a onClick={() => titleOnClick(item.id)}>{item.name}</a><br/>
                                 介绍：{item.description}<br/>
                                 销量：{item.sales}<br/>
                                 类型：{item.type}<br/>

@@ -35,3 +35,12 @@ export const QueryCheckComment = (params: any) => request.get("/comment/check" +
 
 // 新建订单接口
 export const CreateOrder = (params: any) => request.post("/order/create", params);
+
+// 查询订单详情接口
+export const QueryOrderDetail = (params: any) => request.get("/order/queryDetail/" + params)
+
+// 查询评论列表
+export const QueryCommentList = (params: any) => request.get("/comment/queryList/" + params)
+
+// 支付订单
+export const PayOrder = (params: any) => request.post("/order/pay/" + params)

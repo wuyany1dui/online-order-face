@@ -34,7 +34,8 @@ const defaultState = {
         price: 0,
     },
     productId: "",
-    orderId: ""
+    orderId: "",
+    storeId: ""
 }
 
 // 导出一个函数，用于返回state
@@ -46,10 +47,6 @@ export default (state = defaultState, action: any) => {
             newState.productId = "";
             break;
         case "addOrder":
-            console.log("current:");
-            console.log(newState.currentOrders);
-            console.log("redux actionValue:");
-            console.log(action.value);
             let newCurrentOrders:
                 { id: string; userId: string; username: string; nickname: string; storeId: string; storeName: string;
                     merchantId: string; merchantName: string; productInfos: { productId: string; productName: string;
@@ -83,9 +80,6 @@ export default (state = defaultState, action: any) => {
                 newCurrentOrders.push(action.value);
             }
             newState.currentOrders = newCurrentOrders;
-            console.log("redux: ")
-            console.log(newCurrentOrders);
-            console.log(newState.currentOrders);
             break;
         case "toProductInfo":
             newState.productId = action.value;
@@ -93,6 +87,9 @@ export default (state = defaultState, action: any) => {
         case "openOrderModal":
             newState.orderId = action.value;
             break;
+        case "toProductList":
+            newState.storeId = action.value;
+            break
     }
     return newState;
 }

@@ -37,11 +37,15 @@ let queryProduct: IQueryProductPage = {count: 0, data: []}
 
 let userType: number = 0;
 
+let storeId: string = "";
+
 class ProductList extends React.Component {
 
     state = {
         loading: false,
         visible: false,
+        storeId: "",
+        queryProduct: {}
     };
 
     showModal = () => {
@@ -55,7 +59,14 @@ class ProductList extends React.Component {
     };
 
     componentWillMount() {
-        QueryProductListApi(queryProductData).then((res: any) => {
+        storeId = store.getState().storeId;
+        this.setState({storeId: storeId});
+        if (this.state.storeId) {
+            queryProductData.storeId = this.state.storeId;
+        }
+        let tempQueryProductData = queryProductData;
+        tempQueryProductData.storeId = storeId;
+        QueryProductListApi(tempQueryProductData).then((res: any) => {
             queryProduct = res;
             this.setState(queryProduct);
         });
@@ -151,7 +162,8 @@ class ProductList extends React.Component {
                                                     current: 1,
                                                     total: 5,
                                                     pageSize: 5,
-                                                    showSizeChanger: false}}
+                                                    showSizeChanger: false
+                                                }}
                                                 renderItem={item => (
                                                     <List.Item>
                                                         名称：炸鸡 <br/>
