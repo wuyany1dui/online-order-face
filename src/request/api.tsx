@@ -65,3 +65,6 @@ export const ModifyStore = (params: any) => request.post("/store/create", params
 
 // 删除评论接口
 export const DeleteComment = (params: any) => request.post("/comment/delete", params)
+
+// 新增餐品接口
+export const CreateProduct = (params: any) => request.post("/product/create", params);

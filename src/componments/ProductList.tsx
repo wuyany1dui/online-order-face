@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
-import {List, Avatar, Space, Input, Button, Modal, Divider, Form, Row, Col, Select} from 'antd';
+import {List, Avatar, Space, Input, Button, Modal, Divider, Form, Row, Col, Select, message} from 'antd';
 import {DownOutlined, LineChartOutlined, UpOutlined} from '@ant-design/icons';
-import {QueryCategoryList, QueryProductListApi, UserInfoApi} from "../request/api";
+import {CreateProduct, QueryCategoryList, QueryProductListApi, QueryStoreApi, UserInfoApi} from "../request/api";
 import "./less/ProductList.less";
 import {Link, Navigate, Outlet} from "react-router-dom";
 import store from "../store";
@@ -33,6 +33,15 @@ interface IQueryProductPage {
     data: IQueryProductList[];
 }
 
+interface ICreateProductParam {
+    id?: string;
+    storeId: string;
+    name: string;
+    price: number;
+    description: string;
+    type: string | string[];
+}
+
 let queryProductData: IQueryProduct = {pageIndex: 1, pageSize: 3};
 
 let userType: number = 0;
@@ -48,6 +57,9 @@ function ProductList() {
     const [storeId, setStoreId] = React.useState<string>("");
     const [queryProduct, setQueryProduct] = React.useState<IQueryProductPage>({count: 0, data: []});
     const [categoryNameList, setCategoryNameList] = useState<any[]>([]);
+    const [productInfo, setProductInfo] = React.useState<ICreateProductParam>({
+        description: "", id: "", name: "", price: 0, storeId: "", type: ""
+    });
 
     useEffect(() => {
         setStoreId(store.getState().storeId);
@@ -123,6 +135,8 @@ function ProductList() {
 
     let formRef: any = React.createRef()
 
+    const [form] = Form.useForm();
+
     const {Option} = Select;
 
     const layout = {
@@ -147,11 +161,48 @@ function ProductList() {
     };
 
     const onFinish = (values: any) => {
+        QueryStoreApi().then((res: any) => {
+            let tempParams: ICreateProductParam = values;
+            tempParams.storeId = res.id;
+            tempParams.type = values.type.join(",");
+            CreateProduct(tempParams).then((res: any) => {
+                message.success("新增成功");
+                setShowProductModal(false);
+                setStoreId(store.getState().storeId);
+                if (storeId) {
+                    queryProductData.storeId = storeId;
+                }
+                let tempQueryProductData = queryProductData;
+                tempQueryProductData.storeId = storeId;
+                QueryProductListApi(tempQueryProductData).then((res: any) => {
+                    setQueryProduct(res);
+                });
+                UserInfoApi().then((res: any) => {
+                    userType = res.type;
+                });
+                form.resetFields();
+            }).catch((err: any) => {
+                message.error("新增失败");
+                setShowProductModal(false);
+                setStoreId(store.getState().storeId);
+                if (storeId) {
+                    queryProductData.storeId = storeId;
+                }
+                let tempQueryProductData = queryProductData;
+                tempQueryProductData.storeId = storeId;
+                QueryProductListApi(tempQueryProductData).then((res: any) => {
+                    setQueryProduct(res);
+                });
+                UserInfoApi().then((res: any) => {
+                    userType = res.type;
+                });
+            })
+        })
         console.log(values);
     };
 
     const onReset = () => {
-        formRef.resetFields();
+        form.resetFields();
     };
 
     return (
@@ -184,11 +235,17 @@ function ProductList() {
                                        title={productId ? "修改商品" : "新增商品"}
                                        footer={null}
                                        onCancel={handleShowProductModalCancel}>
-                                    <Form {...layout} ref={formRef} name="control-hooks" onFinish={onFinish}>
-                                        <Form.Item name="name" label="餐品名称" rules={[{required: true}]}>
+                                    <Form {...layout}
+                                          form={form}
+                                          ref={formRef}
+                                          name="control-hooks"
+                                          onFinish={onFinish}>
+                                        <Form.Item name="name" label="餐品名称"
+                                                   rules={[{required: true, message: '请输入餐品名称'}]}>
                                             <Input/>
                                         </Form.Item>
-                                        <Form.Item name="type" label="餐品分类" rules={[{required: true}]}>
+                                        <Form.Item name="type" label="餐品分类"
+                                                   rules={[{required: true, message: '请选择餐品分类'}]}>
                                             <Select
                                                 mode="multiple"
                                                 allowClear
@@ -201,13 +258,14 @@ function ProductList() {
                                                 {categoryNameList}
                                             </Select>
                                         </Form.Item>
-                                        <Form.Item name="price" label="餐品价格" rules={[{required: true}]}>
+                                        <Form.Item name="price" label="餐品价格"
+                                                   rules={[{required: true, message: '请输入餐品价格'}]}>
                                             <Input/>
                                         </Form.Item>
                                         <Form.Item name="description" label="餐品描述" rules={[{required: false}]}>
                                             <Input/>
                                         </Form.Item>
-                                        <Form.Item name="firstImage" label="餐品图片" rules={[{required: true}]}>
+                                        <Form.Item name="firstImage" label="餐品图片" rules={[{required: false}]}>
                                             <Input/>
                                         </Form.Item>
                                         <Form.Item {...tailLayout}>
