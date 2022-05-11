@@ -44,3 +44,24 @@ export const QueryCommentList = (params: any) => request.get("/comment/queryList
 
 // 支付订单
 export const PayOrder = (params: any) => request.post("/order/pay/" + params)
+
+// 查询用户列表接口
+export const QueryUserList = (params: any) => request.post("/user/queryList", params);
+
+// 修改用户权限接口
+export const ModifyUserLevel = (params: any) => request.post("/user/modifyLevel", params);
+
+// 查询分类列表接口
+export const QueryCategoryList = (params: any) => request.get("/category/queryList" + params);
+
+// 新增分类接口
+export const CreateCategory = (params: any) => request.post("/category/create", params);
+
+// 删除分类接口
+export const DeleteCategory = (params: any) => request.post("/category/delete", params);
+
+// 修改商店接口
+export const ModifyStore = (params: any) => request.post("/store/create", params)
+
+// 删除评论接口
+export const DeleteComment = (params: any) => request.post("/comment/delete", params)

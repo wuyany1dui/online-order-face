@@ -108,7 +108,9 @@ class OrderInfo extends React.Component {
 
     componentWillMount() {
         UserInfoApi().then((res: any) => {
-            userId = res.id;
+            if (res.type !== 2) {
+                userId = res.id;
+            }
             if (res.type === 2) {
                 showCurrentOrder = false;
                 showDeleteComment = true;

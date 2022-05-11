@@ -13,9 +13,9 @@ const normalUserNames: string[] = ["首页", "商店", "餐品", "我的订单"]
 
 const merchantMenuNames: string[] = ["首页", "商店", "餐品", "我的订单", "商店管理", "餐品管理"];
 
-const adminMenuName: string[] = ["用户管理", "商店管理", "餐品管理", "订单管理", "评论管理"];
+const adminMenuName: string[] = ["用户管理", "分类管理", "商店管理", "餐品管理", "订单管理", "评论管理"];
 
-let menuNames: string[] = ["首页", "商店", "餐品"];
+let menuNames: string[] = ["首页"];
 
 // 用户信息对象
 interface IUserInfo {

@@ -3,6 +3,6 @@ export default function FormatDate(date: Date): string {
         date.getMonth() + "-" +
         date.getDate() + " " +
         date.getHours() + ":" +
-        date.getMonth() + ":" +
-        date.getMinutes());
+        date.getMinutes() + ":" +
+        date.getSeconds());
 }

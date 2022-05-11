@@ -13,6 +13,9 @@ import {UserInfoApi} from "./request/api";
 import DefaultAvatar from "./assets/images/defaultAvatar.png";
 import StoreInfo from "./componments/StoreInfo";
 import StoreList from "./componments/StoreList";
+import UserList from "./componments/UserList";
+import CategoryList from "./componments/CategoryList";
+import CommentList from "./componments/CommentList";
 
 const {Content, Footer} = Layout;
 
@@ -23,6 +26,7 @@ function App() {
     const [showProduct, setShowProduct] = React.useState(false);
     const [storeId, setStoreId] = React.useState("");
     const [showProductList, setShowProductList] = React.useState(false);
+    const [userType, setUserType] = React.useState(0);
 
     const contentView = () => {
         if (showProduct) {
@@ -30,6 +34,24 @@ function App() {
         }
         if (showProductList) {
             return (<ProductList/>);
+        }
+        if (menuKey == 1 && userType == 2) {
+            return (<UserList/>);
+        }
+        if (menuKey == 2 && userType == 2) {
+            return (<CategoryList/>);
+        }
+        if (menuKey == 3 && userType == 2) {
+            return (<StoreList/>);
+        }
+        if (menuKey == 4 && userType == 2) {
+            return (<ProductList/>);
+        }
+        if (menuKey == 5 && userType == 2) {
+            return (<OrderInfo/>);
+        }
+        if (menuKey == 6 && userType == 2) {
+            return (<CommentList/>);
         }
         if (menuKey == 2) {
             return (<StoreList/>);
@@ -55,6 +77,11 @@ function App() {
     useEffect(() => {
         setStoreId("");
         setProductId("");
+        UserInfoApi().then((res: any) => {
+            setUserType(res.type);
+        }).catch((err) => {
+            localStorage.removeItem("token");
+        })
     }, [menuKey])
 
     useEffect(() => {
