@@ -53,18 +53,26 @@ function App() {
         if (menuKey == 6 && userType == 2) {
             return (<CommentList/>);
         }
-        if (menuKey == 2) {
-            return (<StoreList/>);
-        } else if (menuKey == 3) {
-            return (<ProductList/>);
-        } else if (menuKey == 4) {
-            return (<OrderInfo/>);
-        } else if (menuKey == 5) {
-            return (<StoreInfo/>);
-        } else if (menuKey == 6) {
-            return (<ProductList/>);
-        } else {
+        if (menuKey == 1 && (userType == 0 || userType == 1 || userType == undefined)) {
             return (<div><MyCarousel/><MyCollapse/></div>);
+        }
+        if (menuKey == 2 && (userType == 0 || userType == 1)) {
+            return (<StoreList/>);
+        }
+        if (menuKey == 3 && (userType == 0 || userType == 1)) {
+            return (<ProductList/>);
+        }
+        if (menuKey == 4 && (userType == 0 || userType == 1)) {
+            return (<OrderInfo/>);
+        }
+        if (menuKey == 5 && userType == 1) {
+            return (<StoreInfo/>);
+        }
+        if (menuKey == 6 && userType == 1) {
+            return (<ProductList/>);
+        }
+        if (menuKey == 7 && userType == 1) {
+            return (<ProductList/>);
         }
     }
 

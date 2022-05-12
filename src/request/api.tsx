@@ -12,6 +12,9 @@ export const UserInfoApi = () => request.get('/user/userInfo');
 // 修改用户信息接口
 export const ModifyUserInfoApi = (params: any) => request.post('/user/modify', params);
 
+// 修改/新增商店接口
+export const CreateStore = (params: any) => request.post('/store/create', params);
+
 // 修改用户密码接口
 export const ModifyUserPasswordApi = (params: any) => request.post('/user/modifyPwd', params);
 
@@ -68,3 +71,6 @@ export const DeleteComment = (params: any) => request.post("/comment/delete", pa
 
 // 新增餐品接口
 export const CreateProduct = (params: any) => request.post("/product/create", params);
+
+// 新增评论接口
+export const CreateComment = (params: any) => request.post("/comment/create", params);

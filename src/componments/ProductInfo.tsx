@@ -12,15 +12,25 @@ import {
     Input,
     List,
     Form,
-    message
+    message, Modal
 } from 'antd';
 import moment from 'moment';
 import "./less/ProductInfo.less";
 import Logo from '../assets/images/logo.jpg';
 import Laoba from '../assets/images/laoba.jpg';
 import {PlusOutlined} from '@ant-design/icons';
-import {CreateOrder, QueryCheckComment, QueryOrderListApi, QueryProductListApi, UserInfoApi} from "../request/api";
+import {
+    CreateComment,
+    CreateOrder,
+    QueryCheckComment,
+    QueryCommentList,
+    QueryOrderListApi,
+    QueryProductListApi,
+    UserInfoApi
+} from "../request/api";
 import store from "../store";
+import FormDate from "../utils/DateUtils";
+import FormatDate from "../utils/DateUtils";
 
 interface IQueryProduct {
     id?: string;
@@ -95,24 +105,30 @@ interface IQueryOrderParam {
     pageSize: number;
 }
 
-function Editor(props: { submitting: any, onChange: any, onSubmit: any, value: any }) {
-    return (
-        <div>
-            <Form.Item>
-                <TextArea rows={2}/>
-            </Form.Item>
-            <Form.Item>
-                <Button htmlType="submit" type="primary">
-                    添加评论
-                </Button>
-            </Form.Item>
-        </div>
-    );
+interface IQueryCommentParam {
+    productId?: string;
+    pageIndex: number;
+    pageSize: number;
+}
+
+interface IComment {
+    id: string;
+    userId: string;
+    username: string;
+    nickname: string;
+    orderId: string;
+    content: string;
+    createTime: number | Date;
+}
+
+interface ICreateComment {
+    productId: string;
+    content: string;
 }
 
 function ProductInfo() {
 
-    const [productId, setProductId] = React.useState("");
+    const [productId, setProductId] = React.useState<string>("");
     const [productDetail, setProductDetail] = React.useState({});
     const [queryProduct, setQueryProduct] = React.useState({count: 0, data: []});
     const [dotPosition, setDotPosition] = React.useState('top');
@@ -122,6 +138,14 @@ function ProductInfo() {
     const [action, setAction] = useState("");
     const [tempCanComment, setTempCanComment] = useState(false);
     const [count, setCount] = useState(0);
+    const [queryCommentParams, setQueryCommentParams] =
+        React.useState<IQueryCommentParam>({pageIndex: 1, pageSize: 2});
+    const [listDataCount, setListDataCount] = React.useState<number>(0);
+    const [listData, setListData] = React.useState<IComment[]>([]);
+    // const [commentContent, setCommentContent] = React.useState<string>("");
+    const [newComment, setNewComment] = React.useState<ICreateComment>({content: "", productId: ""});
+
+    let commentContent: string = "";
 
     store.subscribe(() => {
         setProductId(store.getState().productId);
@@ -176,7 +200,54 @@ function ProductInfo() {
             canComment = res;
             setTempCanComment(canComment);
         })
+        QueryCommentList("?pageIndex=" + queryCommentParams.pageIndex +
+            "&pageSize=" + queryCommentParams.pageSize + "&productId=" + store.getState().productId)
+            .then((res: any) => {
+                setListDataCount(res.count);
+                setListData(res.data);
+            })
     }, [productId])
+
+    const handleCommentContentOnChange = (e: any) => {
+        commentContent = e.target.value;
+    }
+
+    const createCommentOnClick = () => {
+        setNewComment({productId: store.getState().productId, content: commentContent});
+        let tempNewComment: ICreateComment = {productId: store.getState().productId, content: commentContent}
+        CreateComment(tempNewComment).then((res: any) => {
+            message.success("评论成功");
+            QueryCommentList("?pageIndex=" + queryCommentParams.pageIndex +
+                "&pageSize=" + queryCommentParams.pageSize + "&productId=" + store.getState().productId)
+                .then((res: any) => {
+                    setListDataCount(res.count);
+                    setListData(res.data);
+                })
+        }).catch((err: any) => {
+            message.error("评论失败：" + err.response.data);
+            QueryCommentList("?pageIndex=" + queryCommentParams.pageIndex +
+                "&pageSize=" + queryCommentParams.pageSize + "&productId=" + store.getState().productId)
+                .then((res: any) => {
+                    setListDataCount(res.count);
+                    setListData(res.data);
+                })
+        })
+    }
+
+    function Editor(props: { submitting: any, onChange: any, onSubmit: any, value: any }) {
+        return (
+            <div>
+                <Form.Item>
+                    <TextArea rows={2} onChange={handleCommentContentOnChange}/>
+                </Form.Item>
+                <Form.Item>
+                    <Button htmlType="submit" type="primary" onClick={createCommentOnClick}>
+                        添加评论
+                    </Button>
+                </Form.Item>
+            </div>
+        );
+    }
 
     return (
         <div className="product-box">
@@ -215,7 +286,7 @@ function ProductInfo() {
                             avatar={<Avatar src="https://joeschmoe.io/api/v1/random" alt="Han Solo"/>}
                             content={
                                 <Editor
-                                    onChange=""
+                                    onChange={handleCommentContentOnChange}
                                     onSubmit=""
                                     submitting=""
                                     value=""
@@ -224,20 +295,45 @@ function ProductInfo() {
                         />
                     ) : ""
                 }
-                <Comment
-                    author={<a>DrEAmSs59</a>}
-                    avatar={<Avatar src="https://joeschmoe.io/api/v1/random" alt="Han Solo"/>}
-                    content={
-                        <p>
-                            东西很好吃，孩子很喜欢
-                        </p>
-                    }
-                    datetime={
-                        <Tooltip title={moment().format('YYYY-MM-DD HH:mm:ss')}>
-                            <span>{moment().fromNow()}</span>
-                        </Tooltip>
-                    }
-                />
+                {
+                    listDataCount !== 0 ? (
+                        <List
+                            size="large"
+                            bordered
+                            dataSource={listData}
+                            renderItem={item =>
+                                <List.Item>
+                                    <Comment
+                                        author={<a>{item.nickname}</a>}
+                                        avatar={<Avatar src="https://joeschmoe.io/api/v1/random" alt="Han Solo"/>}
+                                        content={
+                                            <p>
+                                                {item.content}
+                                            </p>
+                                        }
+                                        datetime={
+                                            <span>{FormatDate(new Date(item.createTime))}</span>
+                                        }
+                                    />
+                                </List.Item>
+                            }
+                            pagination={{
+                                total: listDataCount,
+                                pageSize: queryCommentParams.pageSize,
+                                current: queryCommentParams.pageIndex,
+                                onChange: page => {
+                                    setQueryCommentParams({pageIndex: page, pageSize: 2})
+                                    QueryCommentList("?pageIndex=" + page +
+                                        "&pageSize=" + queryCommentParams.pageSize + "&productId=" + store.getState().productId)
+                                        .then((res: any) => {
+                                            setListDataCount(res.count);
+                                            setListData(res.data);
+                                        })
+                                }
+                            }}
+                        />
+                    ) : ""
+                }
             </Space>
         </div>
     );

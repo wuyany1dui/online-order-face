@@ -6,6 +6,7 @@ import "./less/ProductList.less";
 import {Link, Navigate, Outlet} from "react-router-dom";
 import store from "../store";
 import FormatDate from "../utils/DateUtils";
+import StoreInfo from "./StoreInfo";
 
 interface IQueryProduct {
     id?: string;
@@ -25,7 +26,8 @@ interface IQueryProductList {
     description?: string;
     sales: number;
     firstImage?: string;
-    type: string;
+    type: string | string[];
+    storeId: string;
 }
 
 interface IQueryProductPage {
@@ -46,10 +48,6 @@ let queryProductData: IQueryProduct = {pageIndex: 1, pageSize: 3};
 
 let userType: number = 0;
 
-let storeId: string = "";
-
-let categoryNameList: string[] = [];
-
 function ProductList() {
 
     const [showProductModal, setShowProductModal] = React.useState<boolean>(false);
@@ -60,22 +58,28 @@ function ProductList() {
     const [productInfo, setProductInfo] = React.useState<ICreateProductParam>({
         description: "", id: "", name: "", price: 0, storeId: "", type: ""
     });
+    const [myStoreId, setMyStoreId] = React.useState<string>("");
 
     useEffect(() => {
         setStoreId(store.getState().storeId);
-        if (storeId) {
-            queryProductData.storeId = storeId;
-        }
+        // if (store.getState().storeId) {
+        //     queryProductData.storeId = store.getState().storeId;
+        // }
         let tempQueryProductData = queryProductData;
-        tempQueryProductData.storeId = storeId;
+        tempQueryProductData.storeId = store.getState().storeId;
         QueryProductListApi(tempQueryProductData).then((res: any) => {
             setQueryProduct(res);
+
         });
         UserInfoApi().then((res: any) => {
             userType = res.type;
         });
+        QueryStoreApi().then((res: any) => {
+            setMyStoreId(res.id);
+        })
     }, [])
-    const listData = queryProduct.data;
+
+    let listData = queryProduct.data;
 
     // @ts-ignore
     const IconText = ({icon, text}) => (
@@ -110,6 +114,7 @@ function ProductList() {
     }
 
     const searchOnClick = () => {
+        delete queryProductData.storeId;
         QueryProductListApi(queryProductData).then((res: any) => {
             setQueryProduct(res)
         });
@@ -117,6 +122,16 @@ function ProductList() {
 
     const showProductModalOnClick = (id: string) => {
         setShowProductModal(true);
+        setProductId(id)
+        if (id) {
+            setTimeout(() => {
+                let temp: any = listData.find((item => item.id === id));
+                let tempStr: any = temp.type;
+                temp.type = tempStr.split(",");
+                console.log(temp);
+                form.setFieldsValue(temp);
+            }, 100)
+        }
         QueryCategoryList("").then((res: any) => {
             let tempArr: any[] = [];
             QueryCategoryList("").then((res: any) => {
@@ -147,26 +162,18 @@ function ProductList() {
         wrapperCol: {offset: 8, span: 16},
     };
 
-    const onGenderChange = (value: string) => {
-        switch (value) {
-            case 'male':
-                formRef.setFieldsValue({type: 'Hi, man!'});
-                return;
-            case 'female':
-                formRef.setFieldsValue({type: 'Hi, lady!'});
-                return;
-            case 'other':
-                formRef.setFieldsValue({type: 'Hi there!'});
-        }
-    };
-
     const onFinish = (values: any) => {
         QueryStoreApi().then((res: any) => {
             let tempParams: ICreateProductParam = values;
+            tempParams.id = productId;
             tempParams.storeId = res.id;
             tempParams.type = values.type.join(",");
             CreateProduct(tempParams).then((res: any) => {
-                message.success("新增成功");
+                if (tempParams.id) {
+                    message.success("修改成功");
+                } else {
+                    message.success("新增成功");
+                }
                 setShowProductModal(false);
                 setStoreId(store.getState().storeId);
                 if (storeId) {
@@ -182,7 +189,11 @@ function ProductList() {
                 });
                 form.resetFields();
             }).catch((err: any) => {
-                message.error("新增失败");
+                if (tempParams.id) {
+                    message.error("修改失败");
+                } else {
+                    message.error("新增失败");
+                }
                 setShowProductModal(false);
                 setStoreId(store.getState().storeId);
                 if (storeId) {
@@ -251,9 +262,6 @@ function ProductList() {
                                                 allowClear
                                                 style={{width: '100%'}}
                                                 placeholder="请选择分类"
-                                                // key={item.id}
-                                                // defaultValue={item.type.split(",")}
-                                                // onChange={handleChange}
                                             >
                                                 {categoryNameList}
                                             </Select>
@@ -323,8 +331,59 @@ function ProductList() {
                             售价：{item.price} <br/>
                             分类：{item.type}
                             {
-                                userType === 1 ? (
-                                    <Button type="primary" style={{marginLeft: "5px"}}>修改商品信息</Button>
+                                userType === 1 && myStoreId === item.storeId ? (
+                                    <div style={{float: "right"}}>
+                                        <Button type="primary" style={{marginLeft: "5px"}} onClick={() => showProductModalOnClick(item.id)}>修改商品信息</Button>
+                                        <Modal visible={showProductModal}
+                                               title={productId ? "修改商品" : "新增商品"}
+                                               footer={null}
+                                               onCancel={handleShowProductModalCancel}>
+                                            <Form {...layout}
+                                                  form={form}
+                                                  ref={formRef}
+                                                  name="control-hooks"
+                                                  onFinish={onFinish}>
+                                                <Form.Item name="name" label="餐品名称"
+                                                           rules={[{required: true, message: '请输入餐品名称'}]}>
+                                                    <Input/>
+                                                </Form.Item>
+                                                <Form.Item name="type" label="餐品分类"
+                                                           rules={[{required: true, message: '请选择餐品分类'}]}>
+                                                    <Select
+                                                        mode="multiple"
+                                                        allowClear
+                                                        style={{width: '100%'}}
+                                                        placeholder="请选择分类"
+                                                        // key={item.id}
+                                                        // defaultValue={item.type.split(",")}
+                                                        // onChange={handleChange}
+                                                    >
+                                                        {categoryNameList}
+                                                    </Select>
+                                                </Form.Item>
+                                                <Form.Item name="price" label="餐品价格"
+                                                           rules={[{required: true, message: '请输入餐品价格'}]}>
+                                                    <Input/>
+                                                </Form.Item>
+                                                <Form.Item name="description" label="餐品描述" rules={[{required: false}]}>
+                                                    <Input/>
+                                                </Form.Item>
+                                                <Form.Item name="firstImage" label="餐品图片" rules={[{required: false}]}>
+                                                    <Input/>
+                                                </Form.Item>
+                                                <Form.Item {...tailLayout}>
+                                                    <Space>
+                                                        <Button type="primary" htmlType="submit">
+                                                            确定
+                                                        </Button>
+                                                        <Button htmlType="button" onClick={onReset}>
+                                                            重置
+                                                        </Button>
+                                                    </Space>
+                                                </Form.Item>
+                                            </Form>
+                                        </Modal>
+                                    </div>
                                 ) : ""
                             }
                         </List.Item>

@@ -50,18 +50,15 @@ export default function Login() {
                 >
                     <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="请输入用户名" />
                 </Form.Item>
-
                 <Form.Item
                     name="password"
                     rules={[{ required: true, message: '请输入密码' }]}
                 >
                     <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="请输入密码" />
                 </Form.Item>
-
                 <Form.Item>
                     <Link to="/register">还没账号？立即注册！</Link>
                 </Form.Item>
-
                 <Form.Item>
                     <Button type="primary" htmlType="submit" block size="large">
                         登录

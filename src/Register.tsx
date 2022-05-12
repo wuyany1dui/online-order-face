@@ -17,7 +17,6 @@ interface IRegisterParam {
     sign?: string;
 }
 
-
 const formItemLayout = {
     labelCol: {
         xs: { span: 24 },
@@ -46,7 +45,7 @@ export default function Register() {
 
     const navigate = useNavigate();
 
-    const [form] = Form.useForm();
+    let [form] = Form.useForm();
 
     const onFinish = (values: IRegisterParam) => {
         values.type = 0;
@@ -55,7 +54,7 @@ export default function Register() {
         RegisterApi(values).then((res: any) => {
             message.success(res, 1);
             setTimeout(() => {
-                navigate("/register");
+                navigate("/");
             }, 1500);
         }).catch((res: any) => {
             message.error(res.response.data, 1);
@@ -172,7 +171,6 @@ export default function Register() {
                                 value ? Promise.resolve() : Promise.reject(new Error('您还未阅读用户条款！')),
                         },
                     ]}
-                    {...tailFormItemLayout}
                 >
                     <Checkbox>
                         我已阅读 <a href="/">用户条款</a>
@@ -183,7 +181,7 @@ export default function Register() {
                     <Link to="/login">已有帐号？立即登录！</Link>
                 </Form.Item>
 
-                <Form.Item {...tailFormItemLayout}>
+                <Form.Item>
                     <Button type="primary" htmlType="submit" block>
                         立即注册
                     </Button>
