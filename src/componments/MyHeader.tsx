@@ -92,11 +92,13 @@ export default function MyHeader() {
 
     // 组件初始化时加载
     useEffect(() => {
+        setAvatar(DefaultAvatar);
         UserInfoApi().then((res: any) => {
             userInfo = res;
-            setAvatar(userInfo.avatar || DefaultAvatar);
+            setAvatar("http://localhost:8597/online/order/file/download/" + userInfo.avatar || DefaultAvatar);
             setNickname(userInfo.nickname || "暂未登录");
         }).catch(() => {
+            setAvatar(DefaultAvatar);
             localStorage.removeItem("token")
         });
     }, []);
@@ -145,7 +147,7 @@ export default function MyHeader() {
                     <Dropdown overlay={menu} trigger={['click']}>
                         <a onClick={e => e.preventDefault()} href="!#">
                             <Space align="start">
-                                <img src={avatar} alt="!#" width={45} height={45} style={{marginRight: "5px"}}></img>
+                                <img src={avatar} width={45} height={45} style={{marginRight: "5px"}}></img>
                                 {nickname}
                                 <DownOutlined/>
                             </Space>

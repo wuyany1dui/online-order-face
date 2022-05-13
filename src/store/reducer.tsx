@@ -45,6 +45,8 @@ export default (state = defaultState, action: any) => {
         case "menuClick":
             newState.menuKey = action.value;
             newState.productId = "";
+            newState.storeId = "";
+            newState.orderId = "";
             break;
         case "addOrder":
             let newCurrentOrders:

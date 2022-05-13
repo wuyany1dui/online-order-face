@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {List, Avatar, Space, Input, Button, Modal, Divider, Form, Row, Col, Select, message} from 'antd';
-import {DownOutlined, LineChartOutlined, UpOutlined} from '@ant-design/icons';
+import {List, Avatar, Space, Input, Button, Modal, Divider, Form, Row, Col, Select, message, Upload} from 'antd';
+import {DownOutlined, LineChartOutlined, LoadingOutlined, PlusOutlined, UpOutlined} from '@ant-design/icons';
 import {CreateProduct, QueryCategoryList, QueryProductListApi, QueryStoreApi, UserInfoApi} from "../request/api";
 import "./less/ProductList.less";
 import {Link, Navigate, Outlet} from "react-router-dom";
@@ -59,12 +59,16 @@ function ProductList() {
         description: "", id: "", name: "", price: 0, storeId: "", type: ""
     });
     const [myStoreId, setMyStoreId] = React.useState<string>("");
+    const [loading, setLoading] = React.useState<boolean>(false);
+    const [imageUrl, setImageUrl] = React.useState<string>("");
+    const [token, setToken] = React.useState<any>({token: ""});
 
     useEffect(() => {
         setStoreId(store.getState().storeId);
         // if (store.getState().storeId) {
         //     queryProductData.storeId = store.getState().storeId;
         // }
+        setToken({token: localStorage.getItem("token")});
         let tempQueryProductData = queryProductData;
         tempQueryProductData.storeId = store.getState().storeId;
         QueryProductListApi(tempQueryProductData).then((res: any) => {
@@ -120,7 +124,10 @@ function ProductList() {
         });
     }
 
-    const showProductModalOnClick = (id: string) => {
+    const showProductModalOnClick = (id: string, firstImage: string | undefined) => {
+        if (firstImage) {
+            setImageUrl("http://localhost:8597/online/order/file/download/" + firstImage);
+        }
         setShowProductModal(true);
         setProductId(id)
         if (id) {
@@ -128,9 +135,11 @@ function ProductList() {
                 let temp: any = listData.find((item => item.id === id));
                 let tempStr: any = temp.type;
                 temp.type = tempStr.split(",");
-                console.log(temp);
                 form.setFieldsValue(temp);
             }, 100)
+        } else {
+            form.resetFields();
+            setImageUrl("");
         }
         QueryCategoryList("").then((res: any) => {
             let tempArr: any[] = [];
@@ -216,6 +225,44 @@ function ProductList() {
         form.resetFields();
     };
 
+    function beforeUpload(file: any) {
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isJpgOrPng) {
+            message.error('只能上传JPG/PNG文件!');
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+            message.error('图片不能大于2M!');
+        }
+        return isJpgOrPng && isLt2M;
+    }
+
+    function getBase64(img: any, callback: any) {
+        const reader = new FileReader();
+        reader.addEventListener('load', () => callback(reader.result));
+        reader.readAsDataURL(img);
+    }
+
+    const handleChange = (info: any) => {
+        if (info.file.status === 'uploading') {
+            setLoading(true);
+            return;
+        }
+        if (info.file.status === 'done') {
+            getBase64(info.file.originFileObj, (imageUrl: any) => {
+                setLoading(false);
+                setImageUrl(imageUrl);
+            });
+        }
+    };
+
+    const uploadButton = (
+        <div>
+            {loading ? <LoadingOutlined/> : <PlusOutlined/>}
+            <div style={{marginTop: 8}}>图片</div>
+        </div>
+    );
+
     return (
         <div className="product-list-box">
             <div className="search-input">
@@ -241,7 +288,7 @@ function ProductList() {
                     {
                         userType === 1 ? (
                             <div>
-                                <Button type="primary" onClick={() => showProductModalOnClick("")}>新增商品</Button>
+                                <Button type="primary" onClick={() => showProductModalOnClick("", "")}>新增商品</Button>
                                 <Modal visible={showProductModal}
                                        title={productId ? "修改商品" : "新增商品"}
                                        footer={null}
@@ -274,7 +321,22 @@ function ProductList() {
                                             <Input/>
                                         </Form.Item>
                                         <Form.Item name="firstImage" label="餐品图片" rules={[{required: false}]}>
-                                            <Input/>
+                                            <Upload
+                                                name="multipartFile"
+                                                listType="picture-card"
+                                                className="avatar-uploader"
+                                                showUploadList={false}
+                                                action={"http://localhost:8597/online/order/product/uploadImage/" + productId}
+                                                beforeUpload={beforeUpload}
+                                                onChange={handleChange}
+                                                headers={token}
+                                            >
+                                                {
+                                                    imageUrl ?
+                                                        <img src={imageUrl} alt="avatar" style={{width: '100%'}}/>
+                                                        : uploadButton
+                                                }
+                                            </Upload>
                                         </Form.Item>
                                         <Form.Item {...tailLayout}>
                                             <Space>
@@ -319,8 +381,14 @@ function ProductList() {
                             extra={
                                 <img
                                     width={272}
-                                    alt="logo"
-                                    src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                    height={169}
+                                    alt=""
+                                    src={"http://localhost:8597/online/order/file/download/" + item.firstImage}
+                                    defaultValue="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                    onError={(e: any) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                    }}
                                 />
                             }
                         >
@@ -333,7 +401,8 @@ function ProductList() {
                             {
                                 userType === 1 && myStoreId === item.storeId ? (
                                     <div style={{float: "right"}}>
-                                        <Button type="primary" style={{marginLeft: "5px"}} onClick={() => showProductModalOnClick(item.id)}>修改商品信息</Button>
+                                        <Button type="primary" style={{marginLeft: "5px"}}
+                                                onClick={() => showProductModalOnClick(item.id, item.firstImage)}>修改商品信息</Button>
                                         <Modal visible={showProductModal}
                                                title={productId ? "修改商品" : "新增商品"}
                                                footer={null}
@@ -369,7 +438,23 @@ function ProductList() {
                                                     <Input/>
                                                 </Form.Item>
                                                 <Form.Item name="firstImage" label="餐品图片" rules={[{required: false}]}>
-                                                    <Input/>
+                                                    <Upload
+                                                        name="multipartFile"
+                                                        listType="picture-card"
+                                                        className="avatar-uploader"
+                                                        showUploadList={false}
+                                                        action={"http://localhost:8597/online/order/product/uploadImage/" + productId}
+                                                        beforeUpload={beforeUpload}
+                                                        onChange={handleChange}
+                                                        headers={token}
+                                                    >
+                                                        {
+                                                            imageUrl ?
+                                                                <img src={imageUrl} alt="avatar"
+                                                                     style={{width: '100%'}}/>
+                                                                : uploadButton
+                                                        }
+                                                    </Upload>
                                                 </Form.Item>
                                                 <Form.Item {...tailLayout}>
                                                     <Space>

@@ -74,3 +74,6 @@ export const CreateProduct = (params: any) => request.post("/product/create", pa
 
 // 新增评论接口
 export const CreateComment = (params: any) => request.post("/comment/create", params);
+
+// 获取首页美味餐品列表接口
+export const QueryFirstPageProductList = () => request.get('/product/queryFirstPageList');
