@@ -12,7 +12,7 @@ import {
     Input,
     List,
     Form,
-    message, Modal
+    message, Modal, InputNumber
 } from 'antd';
 import moment from 'moment';
 import "./less/ProductInfo.less";
@@ -139,7 +139,7 @@ function ProductInfo() {
     const [dislikes, setDislikes] = useState(0);
     const [action, setAction] = useState("");
     const [tempCanComment, setTempCanComment] = useState(false);
-    const [count, setCount] = useState(0);
+    const [count, setCount] = useState(1);
     const [queryCommentParams, setQueryCommentParams] =
         React.useState<IQueryCommentParam>({pageIndex: 1, pageSize: 2});
     const [listDataCount, setListDataCount] = React.useState<number>(0);
@@ -186,8 +186,8 @@ function ProductInfo() {
         })
     }
 
-    const countOnChange = (e: any) => {
-        setCount(e.target.value)
+    const countOnChange = (value: number) => {
+        setCount(value)
     }
 
     useEffect(() => {
@@ -280,7 +280,7 @@ function ProductInfo() {
                                                 tempProduct.storeName, tempProduct.merchantId, tempProduct.merchantName)}>
                                     加入订单
                                 </Button>
-                                <Input placeholder="数量" onChange={countOnChange}/>
+                                <InputNumber placeholder="数量" min={1} defaultValue={count} max={9999} onChange={countOnChange} />
                             </Space>
                         </Space>
                     </div>

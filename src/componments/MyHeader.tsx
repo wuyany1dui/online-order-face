@@ -15,7 +15,7 @@ const merchantMenuNames: string[] = ["首页", "商店", "餐品", "我的订单
 
 const adminMenuName: string[] = ["用户管理", "分类管理", "商店管理", "餐品管理", "订单管理", "评论管理"];
 
-let menuNames: string[] = ["首页"];
+let defaultMenuNames: string[] = ["首页"];
 
 // 用户信息对象
 interface IUserInfo {
@@ -44,17 +44,46 @@ let userInfo: IUserInfo = {
 
 export default function MyHeader() {
 
+    const [avatar, setAvatar] = useState(DefaultAvatar);
+    const [nickname, setNickname] = useState("暂未登录");
+    const [menuNames, setMenuNames] = React.useState<string[]>(defaultMenuNames);
+
     const navigate = useNavigate();
 
     // 登出，清空本地token
     const dorpdownClick = (key: any) => {
         if (key.key === '1') {
             localStorage.removeItem("token");
-            navigate("/", {replace: true});
+            setNickname("暂未登录");
+            setAvatar(DefaultAvatar);
+            setMenuNames(defaultMenuNames);
+            // 创建action对象
+            const action = {
+                type: "menuClick",       // type属性是必须要写的，用于校验
+                value: 1,          // value代表要修改为什么值
+            }
+            // 将action用dispatch方法传递给store
+            store.dispatch(action);
+            navigate("/login");
         } else if (key.key === '0') {
             navigate("/userInfo");
         }
     };
+
+    const notLoginMenu = (
+        <Menu
+            items={[
+                {
+                    label: <a href="/login">立即登录</a>,
+                    key: '2',
+                },
+                {
+                    label: <a href="/register">前往注册</a>,
+                    key: '3',
+                }
+            ]}
+        />
+    );
 
     const loginMenu = (
         <Menu
@@ -87,17 +116,26 @@ export default function MyHeader() {
         />
     );
 
-    const [avatar, setAvatar] = useState(DefaultAvatar);
-    const [nickname, setNickname] = useState("暂未登录");
-
     // 组件初始化时加载
     useEffect(() => {
         setAvatar(DefaultAvatar);
         UserInfoApi().then((res: any) => {
             userInfo = res;
-            setAvatar("http://localhost:8597/online/order/file/download/" + userInfo.avatar || DefaultAvatar);
+            if (userInfo.avatar) {
+                setAvatar("http://localhost:8597/online/order/file/download/" + userInfo.avatar);
+            } else {
+                setAvatar(DefaultAvatar);
+            }
             setNickname(userInfo.nickname || "暂未登录");
+            if (userInfo.type === 0) {
+                setMenuNames(normalUserNames);
+            } else if (userInfo.type === 1) {
+                setMenuNames(merchantMenuNames);
+            } else if (userInfo.type === 2) {
+                setMenuNames(adminMenuName);
+            }
         }).catch(() => {
+            menu = notLoginMenu;
             setAvatar(DefaultAvatar);
             localStorage.removeItem("token")
         });
@@ -105,14 +143,6 @@ export default function MyHeader() {
 
     if (localStorage.getItem("token")) {
         menu = loginMenu;
-    }
-
-    if (userInfo.type === 0) {
-        menuNames = normalUserNames;
-    } else if (userInfo.type === 1) {
-        menuNames = merchantMenuNames;
-    } else if (userInfo.type === 2) {
-        menuNames = adminMenuName;
     }
 
     const menuClick = (e: any) => {

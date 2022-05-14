@@ -102,8 +102,9 @@ export default function CommentList() {
                                 </div>
                             </List.Item>}
                         pagination={{
+                            current: queryCommentParams.pageIndex,
                             total: listDataCount,
-                            pageSize: listData.length,
+                            pageSize: queryCommentParams.pageSize,
                             onChange: page => {
                                 setQueryCommentParams({pageIndex: page, pageSize: 3})
                                 QueryCommentList("?pageIndex=" + queryCommentParams.pageIndex +

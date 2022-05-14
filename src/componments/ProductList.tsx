@@ -368,7 +368,7 @@ function ProductList() {
                         },
                         current: queryProductData.pageIndex,
                         total: queryProduct.count,
-                        pageSize: queryProduct.data.length,
+                        pageSize: queryProductData.pageSize,
                         showSizeChanger: false
                     }}
                     dataSource={listData}

@@ -1,13 +1,11 @@
 import React, {useEffect, useState} from "react";
 import DefaultAvatar from "./assets/images/defaultAvatar.png";
-import {Button, Checkbox, Form, Input, message, Upload} from "antd";
-import {Link, useNavigate} from "react-router-dom";
-import {ModifyUserInfoApi, RegisterApi, UserInfoApi} from "./request/api";
+import {Button, Checkbox, Form, Input, message, Modal, Upload} from "antd";
+import {useNavigate} from "react-router-dom";
+import {ModifyUserInfoApi, ModifyUserPasswordApi, RegisterApi, UserInfoApi} from "./request/api";
 import './Register.less';
 import './componments/less/ModifyPasswordModal.less'
-import ModifyPasswordModal from "./componments/ModifyPasswordModal";
 import {LoadingOutlined, PlusOutlined} from "@ant-design/icons";
-import {Interface} from "readline";
 
 interface IUserInfoParam {
     id: string;
@@ -18,6 +16,12 @@ interface IUserInfoParam {
     sign?: string;
     type: number;
     avatar?: string;
+}
+
+interface IModifyPassword {
+    oldPassword: string;
+    newPassword: string;
+    confirmNewPassword?: string;
 }
 
 let userInfo: IUserInfoParam = {
@@ -55,9 +59,19 @@ let avatar: string = DefaultAvatar;
 
 export default function UserInfo() {
 
+    const showModal = () => {
+        setModifyPwdVisible(true);
+    };
+
+    const handleCancel = () => {
+        setModifyPwdVisible(false);
+    };
+
     const formRef: any = React.createRef()
 
     const [form] = Form.useForm();
+
+    const navigate = useNavigate();
 
     // 组件初始化时加载
     useEffect(() => {
@@ -81,6 +95,23 @@ export default function UserInfo() {
         });
     };
 
+    const modifyPwdOnFinish = (values: IModifyPassword) => {
+        setModifyPwdLoading(true);
+        delete values.confirmNewPassword;
+        ModifyUserPasswordApi(values).then((res: any) => {
+            message.success("修改成功");
+            setModifyPwdVisible(false);
+            setModifyPwdLoading(false);
+            localStorage.removeItem("token");
+            navigate("/");
+        }).catch((res: any) => {
+            message.error("修改失败：" + res.response.data )
+            setModifyPwdLoading(false);
+        })
+    };
+
+    const [modifyPwdLoading, setModifyPwdLoading] = React.useState<boolean>(false);
+    const [modifyPwdVisible, setModifyPwdVisible] = React.useState<boolean>(false);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [imageUrl, setImageUrl] = React.useState<string>("");
     const [token, setToken] = React.useState<any>({token: ""});
@@ -205,10 +236,73 @@ export default function UserInfo() {
                 </Form.Item>
 
                 <div className="ant-row ant-form-item">
-                    <ModifyPasswordModal/>
+                    <Button type="primary" onClick={showModal}>
+                        修改密码
+                    </Button>
+                    <Modal
+                        visible={modifyPwdVisible}
+                        title="修改密码"
+                        footer={null}
+                        onCancel={handleCancel}
+                    >
+                        <div className='modify_password_modal'>
+                            <Form
+                                name="basic"
+                                labelCol={{span: 8}}
+                                wrapperCol={{span: 16}}
+                                initialValues={{remember: true}}
+                                onFinish={modifyPwdOnFinish}
+                                autoComplete="off"
+                            >
+                                <Form.Item
+                                    label="原密码"
+                                    name="oldPassword"
+                                    rules={[{required: true, message: '请输入原密码！'}]}
+                                >
+                                    <Input.Password/>
+                                </Form.Item>
+
+                                <Form.Item
+                                    label="新密码"
+                                    name="newPassword"
+                                    rules={[{required: true, message: '请输入新密码！'}]}
+                                >
+                                    <Input.Password/>
+                                </Form.Item>
+
+                                <Form.Item
+                                    label="确认新密码"
+                                    name="confirmNewPassword"
+                                    dependencies={['newPassword']}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: '请确认新密码！',
+                                        },
+                                        ({getFieldValue}) => ({
+                                            validator(_, value) {
+                                                if (!value || getFieldValue('newPassword') === value) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(new Error('请确保两个密码一致！'));
+                                            },
+                                        }),
+                                    ]}
+                                >
+                                    <Input.Password/>
+                                </Form.Item>
+
+                                <Form.Item >
+                                    <Button type="primary" htmlType="submit" block>
+                                        确认修改
+                                    </Button>
+                                </Form.Item>
+                            </Form>
+                        </div>
+                    </Modal>
                 </div>
 
-                <Form.Item {...tailFormItemLayout}>
+                <Form.Item>
                     <Button type="primary" htmlType="submit" block>
                         确认修改
                     </Button>

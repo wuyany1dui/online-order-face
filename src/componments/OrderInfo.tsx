@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {List, Typography, Divider, Space, Pagination, Button, Modal, Tooltip, Comment, Avatar, message} from 'antd';
 import './less/OrderInfo.less';
 import {
@@ -76,11 +76,7 @@ let orderListParams: IQueryOrderParam = {pageIndex: 1, pageSize: 3}
 
 let commentListParams: IQueryCommentParam = {pageIndex: 1, pageSize: 2}
 
-let listData: IOrderList[] = [];
-
 let currentListData: IOrderList[] = [];
-
-let resData: IResData = {count: 0, data: []};
 
 let currentResData: IResData = {count: 0, data: []};
 
@@ -90,291 +86,232 @@ let showDeleteComment: boolean = false;
 
 let showPay: boolean = false;
 
-let modalListData: IProductInfo[] = [];
+export default function OrderInfo() {
 
-let commentResData: IResData = {count: 0, data: []};
-let commentListData: ICommentList[] = [];
+    const [loading, setLoading] = React.useState<boolean>(false);
+    const [visible, setVisible] = React.useState<boolean>(false);
+    const [currentOrderVisible, setCurrentOrderVisible] = React.useState<boolean>(false);
+    const [currentOrderDetailVisible, setCurrentOrderDetailVisible] = React.useState<boolean>(false);
+    const [payVisible, setPayVisible] = React.useState<boolean>(false);
+    const [showCurrentOrder, setShowCurrentOrder] = React.useState<boolean>(false);
+    const [showDeleteComment, setShowDeleteComment] = React.useState<boolean>(false);
+    const [orderId, setOrderId] = React.useState<string>("");
+    const [userId, setUserId] = React.useState<string>("");
+    const [resData, setResData] = React.useState<IResData>({count: 0, data: []});
+    const [listData, setListData] = React.useState<IOrderList[]>([]);
+    const [modalListData, setModalListData] = React.useState<IProductInfo[]>([]);
+    const [commentResData, setCommentResData] = React.useState<IResData>({count: 0, data: []});
+    const [commentListData, setCommentListData] = React.useState<ICommentList[]>([]);
 
-class OrderInfo extends React.Component {
-
-    state = {
-        loading: false,
-        visible: false,
-        currentOrderVisible: false,
-        currentOrderDetailVisible: false,
-        payVisible: false,
-        orderId: "",
-    };
-
-    componentWillMount() {
+    useEffect(() => {
         UserInfoApi().then((res: any) => {
             if (res.type !== 2) {
-                userId = res.id;
+                orderListParams.userId = res.id;
+                setUserId(res.id);
             }
             if (res.type === 2) {
-                showCurrentOrder = false;
-                showDeleteComment = true;
-                this.setState(showDeleteComment);
-                this.setState(showCurrentOrder);
+                setShowCurrentOrder(false);
+                setShowDeleteComment(true);
             } else {
-                showCurrentOrder = true;
-                showDeleteComment = false;
-                this.setState(showDeleteComment);
-                this.setState(showCurrentOrder);
+                setShowCurrentOrder(true);
+                setShowDeleteComment(false);
             }
+            QueryOrderListApi(orderListParams).then((res: any) => {
+                setResData(res);
+                setListData(res.data);
+            });
         });
-        orderListParams.userId = userId;
-        QueryOrderListApi(orderListParams).then((res: any) => {
-            resData = res;
-            listData = res.data;
-            this.setState(resData);
-            this.setState(listData);
-        });
-    }
+    }, [])
 
-    showModal = (id: string) => {
+    const showModal = (id: string) => {
         QueryOrderDetail(id).then((res: any) => {
-            modalListData = res;
-            this.setState(modalListData);
+            setModalListData(res);
         })
         QueryCommentList("?orderId=" + id + "&pageIndex=" + commentListParams.pageIndex + "&pageSize=" + commentListParams.pageSize)
             .then((res: any) => {
-                commentResData = res;
-                commentListData = res.data;
-                this.setState(commentResData);
-                this.setState(commentListData);
+                setCommentResData(res);
+                setCommentListData(res.data);
             })
-        this.setState({
-            visible: true,
-        });
+        setVisible(true);
     };
 
-    showPayModal = () => {
-        this.setState({payVisible: true});
+    const showPayModal = () => {
+        setPayVisible(true);
     }
 
-    payOrder = (id: string) => {
+    const payOrder = (id: string) => {
         PayOrder(id).then((res: any) => {
             message.success(res);
-            this.setState({payVisible: false});
+            setPayVisible(false);
             UserInfoApi().then((res: any) => {
-                userId = res.id;
+                setUserId(res.id)
                 if (res.type === 2) {
-                    showCurrentOrder = false;
-                    showDeleteComment = true;
-                    this.setState(showDeleteComment);
-                    this.setState(showCurrentOrder);
+                    setShowCurrentOrder(false);
+                    setShowDeleteComment(true);
                 } else {
-                    showCurrentOrder = true;
-                    showDeleteComment = false;
-                    this.setState(showDeleteComment);
-                    this.setState(showCurrentOrder);
+                    orderListParams.userId = res.id;
+                    setShowCurrentOrder(true);
+                    setShowDeleteComment(false);
                 }
-            });
-            orderListParams.userId = userId;
-            QueryOrderListApi(orderListParams).then((res: any) => {
-                resData = res;
-                listData = res.data;
-                this.setState(resData);
-                this.setState(listData);
+                QueryOrderListApi(orderListParams).then((res: any) => {
+                    setResData(res);
+                    setListData(res.data);
+                });
             });
         }).catch((err: any) => {
             message.error(err);
         })
     }
 
-    showCurrentOrderModal = () => {
-        this.setState({
-            currentOrderVisible: true,
-        });
-        orderListParams.status = "0";
-        UserInfoApi().then((res: any) => {
-            userId = res.id;
-        });
-        orderListParams.userId = userId;
-        QueryOrderListApi(orderListParams).then((res: any) => {
-            currentResData = res;
-            currentListData = res.data;
-            this.setState(currentListData);
-            this.setState(currentResData);
-        });
+    const handleCancel = () => {
+        setVisible(false);
+    };
+
+    const handlePayCancel = () => {
+        setPayVisible(false);
     }
 
-    showCurrentOrderDetailModal = () => {
-        this.setState({
-            currentOrderDetailVisible: true,
-        });
-    };
+    const IconText = ({icon, text}: any) => (
+        <Space>
+            {React.createElement(icon)}
+            {text}
+        </Space>
+    );
 
-    handleCancel = () => {
-        this.setState({visible: false});
-    };
-
-    handlePayCancel = () => {
-        this.setState({payVisible: false});
-    }
-
-    handleCurrentOrderCancel = () => {
-        this.setState({currentOrderVisible: false});
-    };
-
-    handleCurrentOrderDetailCancel = () => {
-        this.setState({currentOrderDetailVisible: false});
-    };
-
-    render() {
-
-        // @ts-ignore
-        const IconText = ({icon, text}) => (
-            <Space>
-                {React.createElement(icon)}
-                {text}
-            </Space>
-        );
-
-        const {visible, loading, currentOrderVisible, currentOrderDetailVisible, payVisible} = this.state;
-
-        return (
-            <div className="order-box">
-                <Space direction="vertical">
-                    <div className="title">
-                        <Divider type="vertical" orientation="center">历史订单</Divider>
-                    </div>
-                    <div className="list">
-                        <List
-                            size="large"
-                            bordered
-                            dataSource={listData}
-                            renderItem={item =>
-                                <List.Item>
-                                    <div>
-                                        订单编号：{item.id} <br/>
-                                        商家名称：{item.merchantName} <br/>
-                                        商店名称：{item.storeName} <br/>
-                                        订单价格：{item.price} <br/>
-                                        订单创建时间：{FormDate(new Date(item.createTime))} <br/>
+    return (
+        <div className="order-box">
+            <Space direction="vertical">
+                <div className="title">
+                    <Divider type="vertical" orientation="center">历史订单</Divider>
+                </div>
+                <div className="list">
+                    <List
+                        size="large"
+                        bordered
+                        dataSource={listData}
+                        renderItem={item =>
+                            <List.Item>
+                                <div>
+                                    订单编号：{item.id} <br/>
+                                    商家名称：{item.merchantName} <br/>
+                                    商店名称：{item.storeName} <br/>
+                                    订单价格：{item.price} <br/>
+                                    订单创建时间：{FormDate(new Date(item.createTime))} <br/>
+                                    {
+                                        item.status === 1 ? (
+                                            <div>
+                                                订单支付时间：{FormDate(new Date(item.payTime))} <br/>
+                                            </div>
+                                        ) : ""
+                                    }
+                                    订单状态：{item.statusDesc} <br/>
+                                </div>
+                                <div className="order-product-info-modal-box">
+                                    <Space direction="vertical">
+                                        <Button type="primary" onClick={() => showModal(item.id)}>
+                                            查看订单内容
+                                        </Button>
                                         {
-                                            item.status === 1 ? (
+                                            item.status === 0 ? (
                                                 <div>
-                                                    订单支付时间：{FormDate(new Date(item.payTime))} <br/>
+                                                    <Button type="primary"
+                                                            onClick={() => showPayModal()}>
+                                                        立即支付
+                                                    </Button>
+                                                    <Modal visible={payVisible}
+                                                           title="请打开微信或支付宝扫描二维码"
+                                                           footer={null}
+                                                           onCancel={handlePayCancel}
+                                                    >
+                                                        <img src={erweima} style={{height: "400px"}}/>
+                                                        <Button type="primary"
+                                                                onClick={() => payOrder(item.id)}>支付成功</Button>
+                                                    </Modal>
                                                 </div>
                                             ) : ""
                                         }
-                                        订单状态：{item.statusDesc} <br/>
-                                    </div>
-                                    <div className="order-product-info-modal-box">
-                                        <Space direction="vertical">
-                                            <Button type="primary" onClick={() => this.showModal(item.id)}>
-                                                查看订单内容
-                                            </Button>
+                                    </Space>
+                                    <div className="modal">
+                                        <Modal visible={visible}
+                                               title="订单内容"
+                                               footer={null}
+                                               onCancel={handleCancel}>
+                                            <List
+                                                itemLayout="vertical"
+                                                size="large"
+                                                dataSource={modalListData}
+                                                renderItem={product => (
+                                                    <List.Item
+                                                        key={product.productId}
+                                                        extra={
+                                                            <img
+                                                                width={272}
+                                                                alt="logo"
+                                                                src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
+                                                            />
+                                                        }
+                                                    >
+                                                        <List.Item.Meta
+                                                            title={product.productName}
+                                                        />
+                                                        数量：{product.count} <br/>
+                                                        售价：{product.price} <br/>
+                                                    </List.Item>
+                                                )}
+                                            />
                                             {
-                                                item.status === 0 ? (
-                                                    <div>
-                                                        <Button type="primary"
-                                                                onClick={() => this.showPayModal()}>
-                                                            立即支付
-                                                        </Button>
-                                                        <Modal visible={payVisible}
-                                                               title="请打开微信或支付宝扫描二维码"
-                                                               footer={null}
-                                                               onCancel={this.handlePayCancel}
-                                                        >
-                                                            <img src={erweima} style={{height: "400px"}}/>
-                                                            <Button type="primary"
-                                                                    onClick={() => this.payOrder(item.id)}>支付成功</Button>
-                                                        </Modal>
-                                                    </div>
+                                                commentListData.length !== 0 ? (
+                                                    <List size="large"
+                                                          bordered
+                                                          dataSource={commentListData}
+                                                          renderItem={comment => (
+                                                              <List.Item>
+                                                                  <Space direction="horizontal">
+                                                                      <Comment
+                                                                          author={<a>{comment.nickname}</a>}
+                                                                          content={
+                                                                              <p>
+                                                                                  {comment.content}
+                                                                              </p>
+                                                                          }
+                                                                          datetime={
+                                                                              <Tooltip
+                                                                                  title={moment().format('YYYY-MM-DD HH:mm:ss')}>
+                                                                                  <span>{moment().fromNow()}</span>
+                                                                              </Tooltip>
+                                                                          }
+                                                                      >
+                                                                          {
+                                                                              showDeleteComment ?
+                                                                                  <Button
+                                                                                      type="primary">删除评论</Button> : ""
+                                                                          }
+                                                                      </Comment>
+                                                                  </Space>
+                                                              </List.Item>
+                                                          )}
+                                                    />
                                                 ) : ""
                                             }
-                                        </Space>
-                                        <div className="modal">
-                                            <Modal visible={visible}
-                                                   title="订单内容"
-                                                   footer={null}
-                                                   onCancel={this.handleCancel}>
-                                                <List
-                                                    itemLayout="vertical"
-                                                    size="large"
-                                                    dataSource={modalListData}
-                                                    renderItem={product => (
-                                                        <List.Item
-                                                            key={product.productId}
-                                                            extra={
-                                                                <img
-                                                                    width={272}
-                                                                    alt="logo"
-                                                                    src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
-                                                                />
-                                                            }
-                                                        >
-                                                            <List.Item.Meta
-                                                                title={product.productName}
-                                                            />
-                                                            数量：{product.count} <br/>
-                                                            售价：{product.price} <br/>
-                                                            {/*{*/}
-                                                            {/*    userType === 1 ? (<Button type="primary">修改商品信息</Button>) : ""*/}
-                                                            {/*}*/}
-                                                        </List.Item>
-                                                    )}
-                                                />
-                                                {
-                                                    commentListData.length !== 0 ? (
-                                                        <List size="large"
-                                                              bordered
-                                                              dataSource={commentListData}
-                                                              renderItem={comment => (
-                                                                  <List.Item>
-                                                                      <Space direction="horizontal">
-                                                                          <Comment
-                                                                              author={<a>{comment.nickname}</a>}
-                                                                              content={
-                                                                                  <p>
-                                                                                      {comment.content}
-                                                                                  </p>
-                                                                              }
-                                                                              datetime={
-                                                                                  <Tooltip
-                                                                                      title={moment().format('YYYY-MM-DD HH:mm:ss')}>
-                                                                                      <span>{moment().fromNow()}</span>
-                                                                                  </Tooltip>
-                                                                              }
-                                                                          >
-                                                                              {
-                                                                                  showDeleteComment ?
-                                                                                      <Button
-                                                                                          type="primary">删除评论</Button> : ""
-                                                                              }
-                                                                          </Comment>
-                                                                      </Space>
-                                                                  </List.Item>
-                                                              )}
-                                                        />
-                                                    ) : ""
-                                                }
-                                            </Modal>
-                                        </div>
+                                        </Modal>
                                     </div>
-                                </List.Item>}
-                            pagination={{
-                                total: resData.count,
-                                pageSize: listData.length,
-                                onChange: page => {
-                                    orderListParams.pageIndex = page;
-                                    QueryOrderListApi(orderListParams).then((res: any) => {
-                                        resData = res;
-                                        listData = res.data;
-                                        this.setState(resData);
-                                        this.setState(listData);
-                                    })
-                                }
-                            }}
-                        />
-                    </div>
-                </Space>
-            </div>
-        );
-    }
+                                </div>
+                            </List.Item>}
+                        pagination={{
+                            current: orderListParams.pageIndex,
+                            total: resData.count,
+                            pageSize: orderListParams.pageSize,
+                            onChange: page => {
+                                orderListParams.pageIndex = page;
+                                QueryOrderListApi(orderListParams).then((res: any) => {
+                                    setResData(res);
+                                    setListData(res.data);
+                                })
+                            }
+                        }}
+                    />
+                </div>
+            </Space>
+        </div>
+    )
 }
-
-export default OrderInfo;

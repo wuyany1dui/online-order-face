@@ -26,7 +26,7 @@ function App() {
     const [showProduct, setShowProduct] = React.useState(false);
     const [storeId, setStoreId] = React.useState("");
     const [showProductList, setShowProductList] = React.useState(false);
-    const [userType, setUserType] = React.useState(0);
+    const [userType, setUserType] = React.useState<any>(0);
 
     const contentView = () => {
         if (showProduct) {
@@ -89,6 +89,7 @@ function App() {
             setUserType(res.type);
         }).catch((err) => {
             localStorage.removeItem("token");
+            setUserType(undefined);
         })
     }, [menuKey])
 

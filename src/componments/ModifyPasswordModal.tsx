@@ -31,10 +31,10 @@ class ModifyPasswordModal extends React.Component {
             this.setState({loading: true});
             delete values.confirmNewPassword;
             ModifyUserPasswordApi(values).then((res: any) => {
-                message.success(res, 1);
+                message.success("修改成功");
                 this.setState({loading: false, visible: false});
             }).catch((res: any) => {
-                message.error(res, 1)
+                message.error("修改失败：" + res.response.data )
             })
         };
 
